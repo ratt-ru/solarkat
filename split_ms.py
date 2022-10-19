@@ -2,7 +2,9 @@ from os import sys
 from astropy.time import Time
 import numpy as numpy
 
-    
+ms=sys.argv[2]
+interval=sys.argv[3]
+
 def split_times(interval,ms):
   dic={ "-": "/", " ":"/"}
 
@@ -29,22 +31,12 @@ def split_times(interval,ms):
       print(SPLITED_ms + 'Done')
 
 
-def split_scans(ms):
-
-  maintab = tb.open(ms)
-  scans = list(numpy.unique(tb.getcol('SCAN_NUMBER')))
-
-  for scan in scans:
-      SPLITED_ms=ms.replace('.ms','_scan_'+str(scan)+'.ms')
-      split(vis=ms,outputvis='/vault-ike/kincaid/solarkat/splitted_ms/'+SPLITED_ms, scan=str(scan) ,datacolumn='all')
-      print(SPLITED_ms + 'Done')
 
 
 if __name__ == "__main__":
-       ms=sys.argv[3]
-       interval=30
-       #split_times(interval,ms)
-       split_scans(ms)
-#
+      
+      split_times(interval,ms)
+       
+
 
   
