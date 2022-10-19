@@ -23,9 +23,18 @@ def split_times(interval,ms):
       array.append(t_iso)
   
   for i in range(len(array)):
+    print(array)
+    
+    if i < (len(array)-1):
+      print(i)
+      print(i+1)
+      print(array[i])
       SPLITED_ms=ms.replace('.ms','_time'+str(i)+'.ms')
-      split(vis=ms,outputvis='/vault-ike/kincaid/solarkat'+SPLITED_ms, timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic) ,datacolumn='all')
-      print(SPLITED_ms + 'Done')
+      split(vis=ms,outputvis='/vault-ike/kincaid/solarkat/'+SPLITED_ms, timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic) ,datacolumn='all')
+      print(str(SPLITED_ms), 'Done')
+    else:
+      print('Done')
+      exit()
 
 
 if __name__ == "__main__":
