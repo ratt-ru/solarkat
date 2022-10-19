@@ -3,7 +3,7 @@ from astropy.time import Time
 import numpy as numpy
 
 ms=sys.argv[2]
-interval=sys.argv[3]
+interval=int(sys.argv[3])
 
 def split_times(interval,ms):
   dic={ "-": "/", " ":"/"}
