@@ -238,7 +238,7 @@ solarkat:
            params:
              ms: '{recipe.mss}'
              prefix: '{recipe.image-prefix}'
-             column: DATA
+             column: SELFCAL_DATA
              temp_dir: temp_dir
              niter: 1
              multiscale: false
