@@ -1,0 +1,760 @@
+_include:
+  - (quartical)stimela_cabs.yaml
+  # - (cubical)stimela/stimela_cabs.yaml
+
+## this augments the standard 'cabs' config section
+cabs:
+  wsclean:
+    image: ''
+    command: /usr/bin/wsclean
+
+  dummy:
+    image: ''
+    command: echo
+    inputs:
+      args:
+        dtype: List[str]
+        policies:
+          positional: true
+          repeat: repeat
+
+  wsclean_pol:
+    policies:
+      skip_implicits: true
+    image: ''
+    command: /home/oms/src/wsclean/build/wsclean
+
+  mkdir:
+    command: mkdir
+    inputs:
+      dir:
+        dtype: str
+        policies:
+          positional: true/stimel
+
+  mv:
+    command: mv
+    policies:
+      positional: true
+    inputs:
+      src:
+        dtype: File
+        required: true
+    outputs:  
+      dest:
+          dtype: Union[File, Directory]
+          required: true
+
+  cp:
+    command: cp -a
+    policies:
+      positional: true
+    inputs:
+      src:
+        dtype: File
+        required: true
+    outputs:
+      dest:
+        dtype: Union[File, Directory]
+        required: true
+
+  flagman:
+    command: casa --nogui --log2term -c 'flagmanager(vis="{current.ms}", mode="{current.mode}", versionname="{current.name}")'
+    policies:
+      skip: true
+    inputs:
+      ms: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      name:
+        info: "flag version name"
+        required: true
+      mode: 
+        choices: [save, restore]
+        default: restore
+
+  splitms:
+    command: casa --nogui --log2term -c 'split(vis="{current.ms}", outputvis="{current.outputvis}", scan="{current.scan}", datacolumn="{current.datacolumn}")'
+    inputs:
+      ms: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      scan:
+        dtype: str
+        info: "scan number range"
+        default: 'all'
+      datacolumn:
+        dtype: str 
+        default: 'corrected_data'
+      outputvis:
+        dtype: Directory
+        mkdir: true
+        required: true 
+
+
+  splitms_time:
+    command: casa --nogui --log2term -c 'split(vis="{current.ms}", outputvis="{current.outputvis}", timerange="{current.timerange}", datacolumn="{current.datacolumn}")'
+    inputs:
+      ms: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      timerange:
+        dtype: str
+        info: "scan number range"
+        default: 'all'
+      datacolumn:
+        dtype: str 
+        default: 'corrected_data'
+      outputvis:
+        dtype: Directory
+        mkdir: true
+        required: true 
+  
+  print_uniq_column_values:
+    command: "python3 -c 'from casacore.tables import table; import sys; print(len(set(table(sys.argv[1]).getcol(sys.argv[2]))),sys.argv[3]);'"
+    policies:
+      positional: true
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      column:
+        default: 'TIME'
+      label:
+        default: 'timeslots'
+
+ 
+  stack_freq_cube:
+    command: fitstool.py
+    inputs:
+      images:
+        dtype: List[File]
+        required: true
+        policies:
+          positional: true
+          repeat: repeat
+    outputs:
+      cube:
+        dtype: File
+        policies:
+          positional: true
+          format: '--stack={0}:FREQ'
+
+  fitstool:
+    command: fitstool.py
+    inputs:
+      images:
+        dtype: List[File]
+        required: true
+        policies:
+          positional: true
+          repeat: repeat
+      mean:
+        dtype: bool
+      diff:
+        dtype: bool
+      force:
+        dtype: bool
+        default: true
+    outputs:
+      output:
+        dtype: File
+
+  pybdsm:
+    command: ./run_pybdsm.py
+    parameter_passing: yaml
+    inputs:
+      image:
+        dtype: File
+      spectralindex_do:
+        dtype: bool
+        default: false
+      flagging_opts:
+        dtype: bool
+        default: false
+      flag_maxsize_bm:
+        dtype: float
+        required: false
+      rms_box:
+        required: false
+        dtype: Tuple[int, int]
+      thresh_isl:
+        dtype: float
+        default: 3
+      thresh_pix:
+        dtype: float
+        default: 5
+      catalog_type:
+        choices: [srl, gaul, shap]
+        default: srl
+      catalog_format:
+        choices: [bbs, ds9, fits, star, kvis, ascii, csv, casabox, sagecal]
+        default: ascii
+      rms_map:
+        dtype: bool
+        required: false
+    outputs:
+      outfile:
+        dtype: File
+
+  tigger_convert:
+    command: tigger-convert
+    inputs:
+      src:
+        dtype: File
+        required: true
+        policies:
+          positional: true
+      force:
+        dtype: bool
+        default: true
+    outputs:
+      dest:
+        dtype: File
+        policies:
+          positional: true
+
+  crystalball:
+    command: crystalball
+    #virtual_env: ~/venv/crystalball
+    policies:
+      prefix: '--'
+      replace: {'_': '-'}
+    inputs:
+      ms:
+        dtype: MS
+        writable: true
+        required: true
+        policies:
+          positional: true
+      output_column:
+        dtype: str
+        required: true
+      sky_model:
+        dtype: File
+        required: true
+      within:
+        dtype: File
+      num_sources:
+        dtype: int
+
+  breizorro:
+    command: breizorro
+    policies:
+      replace: {'_': '-'}
+    inputs:
+      restored_image:
+        dtype: File
+      mask_image:
+        dtype: File
+      merge:
+        dtype: Union[str, List[str]]
+      subtract:
+        dtype: Union[str, List[str]]
+      threshold:
+        dtype: float
+        default: 6.5
+      dilate:
+        dtype: int
+      number_islands:
+        dtype: bool
+      extract_islands:
+        dtype: List[str]
+        policies:
+          repeat: list
+      remove_islands:
+        dtype: List[str]
+        policies:
+          repeat: list
+      invert:
+        dtype: bool
+      make_binary:
+        dtype: bool
+    outputs:
+      mask:
+        dtype: File
+        nom_de_guerre: outfile
+        required: true 
+
+  taql_update:
+    command: "taql update"
+    policies:
+      positional: true
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      commands:
+        dtype: List[str]
+        policies:
+          repeat: list
+
+  ddfacet-deprecated:
+    command: DDF.py
+    virtual_env: ~/.venv/ddf
+    policies:
+      prefix: '--'
+      replace: {'__': '-'}
+      explicit_true: 'True'
+      explicit_false: 'False'
+    inputs:
+      parset:
+        dtype: File
+        required: false
+        policies:
+          positional: true
+      Output-Name:
+        dtype: str
+        required: true 
+        mkdir: true
+      Data-MS: 
+        dtype: MS
+      Data-ColName:
+        default: CORRECTED_DATA
+      Data-ChunkHours:
+        dtype: float
+      Image-Cell:
+        dtype: float
+      Image-NPix:
+        dtype: int
+      Output-Mode:
+        default: Clean
+      Facets-DiamMin:
+        dtype: float
+      Facets-DiamMax:
+        dtype: float
+      Parallel-NCPU:
+        dtype: int
+      Freq-NBand:
+        dtype: int
+      Freq-NDegridBand:
+        dtype: int 
+      RIME-DecorrMode:
+        dtype: str
+      Deconv-Mode:
+        choices: [SSD, SSD2, HMP, Hogbom]
+      Deconv-MaxMajorIter:
+        dtype: int
+      Facets-NFacets:
+        dtype: int
+      Facets-CatNodes:
+        dtype: File
+      SSD2-PolyFreqOrder: 
+        dtype: int
+      Mask-External:
+        dtype: File
+      Mask-Auto:
+        dtype: bool
+      Mask-SigTh:
+        dtype: float
+      Cache-Reset:
+        dtype: bool
+      Cache-Dirty:
+        choices: [off, reset, auto, forcedirty, forceresidual]
+      Cache-PSF:
+        choices: [off, reset, auto, force]
+      Weight-ColName:
+        dtype: Union[str, List[str]]
+        policies:
+          repeat: '[]'
+      Predict-InitDicoModel:
+        dtype: File
+      Predict-ColName:
+        dtype: str
+      DDESolutions-DDSols:
+        dtype: str
+      Beam-Model:
+        dtype: str
+        choices: [None, FITS]
+      Beam-Smooth:
+        dtype: bool
+      Beam-NBand:
+        dtype: int
+      Beam-FITSParAngleIncDeg:
+        dtype: float
+      Beam-FITSFile:
+        dtype: str
+      Beam-CenterNorm:
+        dtype: bool
+      Beam-FITSFeed:
+        dtype: str
+      Beam-FITSFeedSwap:
+        dtype: bool
+      Beam-ApplyPJones:
+        dtype: bool
+      Beam-FlipVisibilityHands:
+        dtype: bool
+      Log-Boring:
+        dtype: bool
+        default: true
+
+  ddf_makemodel:
+    command: MakeModel.py
+    inputs:
+      ds9PreClusterFile:
+        dtype: File
+        required: true
+      BaseImageName:
+        dtype: str
+        required: true
+      NCluster:
+        dtype: int
+        default: 0
+    outputs:
+      ClusterCat:
+        implicit: '{current.ds9PreClusterFile}.ClusterCat.npy'
+
+  killms-deprecated:
+    command: kMS.py
+    virtual_env: ~/.venv/ddf
+    policies:
+      prefix: '--'
+      replace: {'__': '-'}
+      explicit_true: 'True'
+      explicit_false: 'False'
+    inputs:
+      MSName:
+        dtype: MS
+        required: true
+      BaseImageName:
+        dtype: str
+        required: true
+      InCol:
+        dtype: str
+        default: CORRECTED_DATA
+      FieldID:
+        dtype: int
+      SolverType:
+        choices: [KAFCA, CohJones]
+      PolMode:
+        dtype: str
+      dt:
+        dtype: float
+      NCPU:
+        dtype: int
+      OutSolsName:
+        dtype: str
+        required: true
+      NChanSols:
+        dtype: int
+      TChunk:
+        dtype: float
+      BeamModel:
+        choices: [None, FITS]
+      NChanBeamPerMS:
+        dtype: int
+      FITSParAngleIncDeg:
+        dtype: float
+      FITSFile:
+        dtype: str
+      CenterNorm:
+        dtype: bool
+      FITSFeed:
+        dtype: str
+      FITSFeedSwap:
+        dtype: bool
+      ApplyPJones:
+        dtype: bool
+      FlipVisibilityHands:
+        dtype: bool
+
+  convolve_image:
+    command: (image_utils)convolve_image
+    inputs:
+      image:
+        dtype: File
+        required: true
+      size_arcsec:
+        dtype: float
+      size_pix:
+        dtype: float
+    outputs:
+      outimage:
+        dtype: File
+
+  perscan_timerange_intervals:
+    command: (find_sun_stimela)perscan_timerange_intervals
+    inputs:
+      interval:
+        dtype: int
+        required: true
+      scan_list:
+         dtype: list[MS]
+    outputs:
+      outfile:
+        dtype: File
+   
+
+  backup_UVW:
+    command: (find_sun_stimela)backup_UVW
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      UVW_colname:
+        dtype: str
+        required: true
+
+  restore_UVW:
+    command: (find_sun_stimela)restore_UVW
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      UVW_colname:
+        dtype: str
+        required: true
+
+  sun_coordinates:
+    command: (find_sun_stimela)sun_coordinates
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+    outputs:
+      outfile:
+        dtype: File
+
+  shift_to_sun:
+    command: (find_sun_stimela)shift_to_sun
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      sun_coords:
+        dtype: File
+      splitted_ms_dir:
+        dtype: Directory
+        mkdir: true
+    outputs:
+      outfile:
+        dtype: File
+
+  extract_fits_timestamps:
+    command: (image_utils)extract_fits_timestamps
+    inputs:
+      interval:
+        dtype: int
+        required: true
+    outputs:
+      outfile:
+        dtype: File
+ 
+  extract_light_curves:
+    command: (image_utils)extract_light_curves
+    inputs:
+      cube:
+        dtype: File
+      catalog:
+        dtype: File
+      timestamps:
+        dtype: File
+      outdir:
+        dtype: Directory
+        mkdir: true
+        must_exist: false
+      nsrc:
+        dtype: int
+        default: 100
+      ra0:
+        dtype: str
+        default:
+      dec0:
+        dtype: str
+        default:
+      within_deg:
+        dtype: float
+        required: false
+      minsize_arcsec:
+        dtype: float
+        default: 10
+    outputs:
+      regfile:
+        dtype: File
+
+
+lib:
+  steps:
+    wsclean:
+      base:
+        info: "base wsclean settings"
+        cab: wsclean
+        params:
+          size: 6075
+          scale: 1.5asec
+          padding: 1.3
+          #nwlayers_factor: 12
+          nchan: 8
+          temp_dir: /net/ike/vault-ike/kincaid/jovial_run/temp_dir
+          #use_wgridder: false
+          #log_time: true
+          ms: '{recipe.ms}'
+          prefix: '{recipe.image-prefix}'  
+           
+
+      dirty:
+        _use: lib.steps.wsclean.base
+        info: "wsclean step for dirty-only image"
+        params:
+          column: CORRECTED_DATA
+          weight: 'briggs 0'
+          niter: 0
+          # parallel_gridding: 64
+
+      dirty_pol:
+        _use: lib.steps.wsclean.dirty
+        info: "wsclean step for dirty-only IQUV image"
+        cab: wsclean_pol
+        params:
+          pol: IQUV
+
+      image:
+        _use: lib.steps.wsclean.dirty
+        info: "wsclean step for imaging"
+        params:
+          column: CORRECTED_DATA
+          mgain: 0.9
+          weight: 'briggs 0'
+          #fit_beam: true
+          # elliptical_beam: true
+          niter: 50000
+          # join_channels: true
+          #fit_spectral_pol: 4
+          
+
+      image_pol:
+        _use: lib.steps.wsclean.image
+        info: "wsclean step for IQUV imaging"
+        cab: wsclean_pol
+        params:
+          join_polarizations: true
+          fit_spectral_pol: 
+          pol: IQUV
+
+      image_pol2:
+        _use: lib.steps.wsclean.image_pol
+        info: "wsclean step for IQ imaging"
+        params:
+          pol: IQ
+
+      predict:
+        _use: lib.steps.wsclean.base
+        info: "wsclean step for predicting a model"
+        params:
+          predict: true
+
+      predict_pol:
+        _use: lib.steps.wsclean.predict
+        info: "wsclean step for predicting an IQUV model"
+        cab: wsclean_pol
+        params:
+          predict: true
+          pol: IQUV
+
+      predict_pol2:
+        _use: lib.steps.wsclean.predict_pol
+        info: "wsclean step for predicting an IQ model"
+        params:
+          pol: IQUV
+  
+    ddfacet:
+      base:
+        cab: ddfacet-0
+        params:
+          Data-ColName: CORRECTED_DATA 
+          Image-Cell: 0.8 
+          Image-NPix: 10000 
+          Facets-DiamMin: 0.03 
+          Facets-DiamMax: 0.3 
+          Parallel-NCPU: 96 
+          Data-ChunkHours: 2 
+          Freq-NBand: 3 
+          Freq-NDegridBand: 10 
+          RIME-DecorrMode: FT
+          Weight-ColName: WEIGHT_SPECTRUM
+      
+      meerkat_beam:    
+        params:
+          Beam-Model: FITS
+          Beam-NBand: 20 
+          Beam-FITSParAngleIncDeg: 0.5 
+          Beam-FITSFile: 'beams/meerkat_pb_jones_cube_95channels_$(xy)_$(reim).fits' 
+          Beam-CenterNorm: true
+          Beam-FITSFeed: xy 
+          Beam-FITSFeedSwap: true
+          Beam-ApplyPJones: true 
+          Beam-FlipVisibilityHands: true
+          Beam-Smooth: 1
+  
+      dirty:
+        _use: lib.steps.ddfacet.base
+        params:
+          Output-Mode: Dirty
+
+      ssd2:
+        _use: lib.steps.ddfacet.base
+        params:
+          Output-Mode: Clean
+          Deconv-Mode: SSD2
+          Deconv-MaxMajorIter: 2
+          SSD2-PolyFreqOrder: 3 
+          Mask-Auto: true
+          Facets-CatNodes: none # ds9.reg.ClusterCat.npy
+
+    killms:
+      base:
+        cab: killms
+        params:
+          FieldID: 0
+          SolverType: KAFCA 
+          PolMode: Scalar 
+          dt: 5
+          NCPU: 96 
+          OutSolsName: DD0 
+          NChanSols: 20 
+          InCol: CORRECTED_DATA 
+          TChunk: 2
+
+      meerkat_beam:    
+        params:
+          BeamModel: FITS
+          NChanBeamPerMS: 20 
+          FITSParAngleIncDeg: 0.5 
+          FITSFile: 'beams/meerkat_pb_jones_cube_95channels_$(xy)_$(reim).fits' 
+          CenterNorm: true
+          FITSFeed: xy 
+          FITSFeedSwap: true
+          ApplyPJones: true 
+          FlipVisibilityHands: true
+
+    quartical:
+      base:
+        cab: quartical
+        params:
+          input_ms.time_chunk: '16'
+          input_ms.freq_chunk: '0'
+          input_ms.group_by: [SCAN_NUMBER,FIELD_ID,DATA_DESC_ID]
+          input_ms.select_uv_range: [150, 0]
+          input_ms.select_corr: [0, 3]
+          input_model.apply_p_jones: false
+          solver.terms: [K]
+          solver.iter_recipe: [25]
+          solver.propagate_flags: true
+          solver.robust: false
+          output.overwrite: true
+          output.products: [corrected_data]
+          output.columns: [CORRECTED_DATA]
+          output.flags: true
+          output.apply_p_jones_inv: false
+          output.net_gain: false
+          mad_flags.enable: true
+          mad_flags.threshold_bl: 5
+          mad_flags.threshold_global: 5
+          mad_flags.max_deviation: 5
+          K.time_interval: 1
+          K.freq_interval: 0
+          K.type: delay
+
