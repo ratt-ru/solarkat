@@ -1,0 +1,278 @@
+_include:
+  - omstimelation/oms-cabs.yml 
+
+# # override default imaging settings from oms-cabs
+lib:
+  steps:
+    wsclean:
+      base:
+        params:
+          ms: '{recipe.ms}'
+          prefix: '{recipe.image-prefix}'
+          size: 6076
+          scale: 1.5asec
+          # size: '{recipe.wsclean_size}'
+          # scale: '{recipe.pixel_scale}asec'
+  recipes:
+    make_masks:
+      name: make_masks
+      info: "makes a series of mask images based on a restored image"
+      inputs:
+        prefix:
+          dtype: str
+
+      aliases:
+        restored_image: mask.restored_image
+        threshold: mask.threshold
+        dilate: mask.dilate
+        mask: mask.mask
+      defaults:
+        threshold: 6.5
+        dilate: 2
+
+      steps:
+        mask:
+          cab: breizorro
+          params:
+            mask: '{recipe.prefix}-mask.fits'
+
+## this augments the standard 'opts' config section to tweak logging settings
+opts:
+  log:
+    dir: './{root.dir_out}/logs/log-{run.datetime}'
+    name: log-{info.fqname}.txt
+    nest: 2
+    symlink: log
+
+
+boom:
+  name: boom
+  info: "imaging of deep transient follow-up"
+
+  assign:
+    image-prefix: '{recipe.dir_out}/im{info.suffix}/im{info.suffix}{recipe.suffix}'
+
+  assign_based_on:
+    obs:
+      L1:
+        ms: MIGHTEE_CDFS_raw-J0333_2741-corr.ms
+        dir_out: obs1lb
+        perscan_dir_out: perscan_ms
+        sun_images: image_sun
+        band: L
+  
+  inputs:
+    obs:
+      choices: [L1]
+      info: "Selects observation, see labels above"
+    suffix:
+      dtype: str
+      default: ''
+    dir_out: 
+      dtype: str
+    ms:
+      dtype: MS
+    splitted_ms_suffix:
+      dtype: str
+      default: '_scan_'
+    ms_list:
+      dtype: List[MS]
+
+  steps:
+    image-1:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params: 
+        column: DATA
+        temp_dir: temp_dir 
+        save-source-list: false
+                
+    mask-1:
+      recipe: 
+        _use: lib.recipes.make_masks 
+      params:
+        restored_image: "{previous.restored_mfs}"
+        prefix: "{previous.prefix}"
+        threshold: 20
+
+    image-2:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: DATA
+        fits-mask: "{previous.mask}"
+        temp_dir: temp_dir 
+        save-source-list: false
+
+    save-flags-1: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "after 1GC"
+        mode: save
+    
+    restore-flags-1: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "after 1GC"
+        mode: restore
+   
+    quartical_1:
+      cab: quartical
+      info: "Peel off axis source"
+      params:
+        input_ms.path: '{recipe.ms}'
+        solver.terms: [K]
+        K.type: phase
+        K.direction_dependent: false
+        K.freq_interval: '0'
+        K.time_interval: '4' 
+        K.initial_estimate: true
+        input_ms.time_chunk: '128'
+        solver.iter_recipe: [100]
+        input_model.recipe: MODEL_DATA
+        output.overwrite: 'true'
+        output.products: [corrected_data]
+        output.columns: [SELFCAL_DATA]
+
+    save-flags-2: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "after 2GC"
+        mode: save
+   
+    image-3:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: SELFCAL_DATA
+        temp_dir: temp_dir
+        save-source-list: false
+        fits-mask: "{steps.image-1.prefix}-mask.fits"
+
+    mask-2:
+      recipe: 
+        _use: lib.recipes.make_masks 
+      params:
+        restored_image: "{previous.restored_mfs}"
+        prefix: "{previous.prefix}"
+        threshold: 5
+
+    image-4:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: SELFCAL_DATA
+        temp_dir: temp_dir
+        save-source-list: true
+        fits-mask: "{previous.mask"
+        niter: 1000000
+        multiscale: false
+ 
+    backup_UVW:
+      cab: backup_UVW
+      params:
+        ms: '{recipe.ms}'
+        UVW_colname: 'UVW'
+
+    restore_UVW:
+      cab: restore_UVW
+      skip: true
+      params:
+        ms: '{recipe.ms}'
+        UVW_colname: 'UVW'
+
+    split_ms_by_scan:
+      cab: splitms
+      params:
+        ms: '{recipe.ms}'
+        outputvis: '{recipe.dir_out}/{recipe.perscan_dir_out}'
+        scan: 'all'
+        datacolumn: 'all'
+
+    sun_coordinates:
+      cab: sun_coordinates
+      params:
+        ms: '{recipe.ms}'
+        outfile: 'sun_coordinates.txt'
+
+    shift_to_sun:
+      cab: shift_to_sun
+      params:
+        ms: '{recipe.ms}'
+        sun_coords: '{previous.outfile}'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
+ 
+        
+    image_sun:
+      params:
+        ms_list:  =GLOB("{steps.split_ms_by_scan.outputvis}/*scan*.ms") # insert folder path then glob#         
+        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+           _use: lib.steps.wsclean.image
+           params:
+             ms: '{recipe.mss}'
+             prefix: '{recipe.image-prefix}'
+             column: DATA
+             temp_dir: temp_dir
+             niter: 1
+             multiscale: false
+             subtract-model: true
+
+#--------------------------------------------------------#
+#split indivudal scans further by time#
+#--------------------------------------------------------#
+
+
+    split_scan_time_coordinates:
+      info: select an interval to split the scan into smaller time components
+      recipe:
+       inputs:
+          ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: scan_list
+          over:  =GLOB("{steps.split_ms_by_scan.outputvis}/*scan*.ms") #[MIGHTEE_CDFS_raw-J0333_2741-corr_scan_3.ms]
+        steps:
+          cab: perscan_timerange_intervals
+          params:
+            interval: 3 
+            ms_list: '{recipe.scan_list}'
+            outfile: 'perscan_time_coordinates.txt'
+
+
+    split_ms_by_time:
+      cab: splitms
+      params:
+        ms: '{recipe.ms}'
+        outputvis: '{recipe.dir_out}/{recipe.perscan_dir_out}'
+        timerange: '{previous.outfile}'
+        datacolumn: 'all'
+
+
+    sun_coordinates:
+      cab: sun_coordinates
+      params:
+        ms: '{recipe.ms}'
+        outfile: 'sun_coordinates.txt'
+
+    shift_to_sun:
+      cab: shift_to_sun
+      params:
+        ms: '{recipe.ms}'
+        sun_coords: '{previous.outfile}'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
