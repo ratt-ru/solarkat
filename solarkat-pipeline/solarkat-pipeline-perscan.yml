@@ -240,7 +240,7 @@ solarkat:
              prefix: '{recipe.image-prefix}'
              column: SELFCAL_DATA
              temp_dir: temp_dir
-             niter: 1
+             niter: 0
              multiscale: false
              subtract-model: true
 
