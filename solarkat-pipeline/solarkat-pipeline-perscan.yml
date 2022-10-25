@@ -66,7 +66,6 @@ solarkat:
         perscan_dir_out: perscan_ms2
         sun_images: image_sun
         band: L
-    obs:
       UHF:
         ms: 1583662427_sdp_l0.1024ch-J033230_280757-corr.ms
         dir_out: obsuhf
