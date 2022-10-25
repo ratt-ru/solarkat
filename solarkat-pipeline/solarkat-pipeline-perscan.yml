@@ -57,13 +57,27 @@ solarkat:
       L1:
         ms: MIGHTEE_CDFS_raw-J0333_2741-corr.ms
         dir_out: obs1lb
-        perscan_dir_out: perscan_ms
+        perscan_dir_out: perscan_ms1
         sun_images: image_sun
         band: L
+      L2:
+        ms: 1645272078_sdp_l0_1024ch_J0333-2741.ms
+        dir_out: obs2lb
+        perscan_dir_out: perscan_ms2
+        sun_images: image_sun
+        band: L
+    obs:
+      UHF:
+        ms: 1583662427_sdp_l0.1024ch-J033230_280757-corr.ms
+        dir_out: obsuhf
+        perscan_dir_out: perscans_ms3
+        sun_images: image_sun
+        band: UHF
+    
   
   inputs:
     obs:
-      choices: [L1]
+      choices: [L1, L2, UHF]
       info: "Selects observation, see labels above"
     suffix:
       dtype: str
