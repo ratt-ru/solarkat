@@ -118,14 +118,4 @@ def perscan_timerange_intervals(interval,ms_list,outfile):
             f.write(line)
             f.writelines('\n')
 
-def image_sun():
- 
-    maintab = table(myms,ack=False)
-    scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
-
-    for scan in scans:
-        splitted_ms=splitted_path+ ms.replace(."ms","_"+str(scan)+".ms") "MIGHTEE_CDFS_raw-J0333_2741-corr_scan_"+str(scan)+".ms"
-        output_ms=splitted_ms.replace(str(scan)+".ms",'_phase_shift_'+str(scan))
-        os.system(f"wsclean -name {output_ms} -subtract-model -mem 60 -weight briggs 0.0 -size 6075 6075 -scale 1.5asec -pol I -intervals-out 1 -data-column DATA -fit-spectral-pol 2 -channels-out 4 -join-channels -niter 0 -gain 0.1 -mgain 0.99 -auto-threshold 0.2 {splitted_ms}")
-  
 
