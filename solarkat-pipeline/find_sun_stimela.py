@@ -59,8 +59,8 @@ def sun_coordinates(ms,outfile):
             sun_ra = sun.ra.value
         sun_dec = sun.dec.value
         sun_hms=format_coords(sun_ra,sun_dec)
-        print(sun_hms[0],sun_hms[1])
-        lines.append(sun_hms[0]+' '+sun_hms[1])
+        print(sun_hms[0],sun_dms[1])
+        lines.append(sun_hms[0]+' '+sun_dms[1])
     print(lines)
 
     with open(outfile,'wt') as f:
