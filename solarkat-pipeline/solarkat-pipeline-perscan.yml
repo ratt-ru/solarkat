@@ -244,3 +244,88 @@ solarkat:
              multiscale: false
              subtract-model: true
 
+#--------------------------------------------------------#
+#split individual scans further by time#
+#--------------------------------------------------------#
+
+    split_ms_by_time:
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") # insert folder path then glob#         
+        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          perscan_get_timeranges:
+            cab: 
+              command: |  
+                from pyrap.tables import table
+                from astropy.time import Time
+                import numpy as np
+                dic={ "-": "/", " ":"/"}
+
+                def replace_all(text, dic):
+                    
+                    for i, j in dic.items():
+                        text = text.replace(i, j)
+                    return text
+
+                array=[]
+                timerange_array=[]
+                tb = table(scan_list)
+                all_times = list(np.unique(tb.getcol('TIME')))
+                t0 = all_times[0]
+                t1 = all_times[-1]
+                dt = (t1-t0)/(interval)
+                for i in range(interval):
+                    t2=dt*i+t0
+                    t_iso = Time(t2/86400.0,format='mjd').iso
+                    array.append(t_iso)
+                for i in range(len(array)):
+                  if i < (len(array)-1):
+                      timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
+                      timerange_array.append(timerange)
+                  else:
+                      print()
+                timeranges=timerange_array
+                print(timerange_array)
+              flavour: python-code
+              inputs:
+                scan_list:
+                  dtype: MS
+                interval:
+                  dtype: int
+              outputs:  
+                timeranges:
+                  dtype: List[str]  
+            params:
+              scan_list: '{recipe.mss}'
+              interval: 3
+          loop_timeranges:
+            params: 
+              timeranges: '=steps.perscan_get_timeranges.timeranges'
+              ms: '=steps.perscan_get_timeranges.scan_list'
+            recipe:
+              inputs:
+                ms: 
+                  dtype: MS
+                timeranges:
+                  dtype: List[str]
+              for_loop:
+                var: timerange
+                over: timeranges
+              steps:          
+                Casa-split-time:
+                  cab: splitms_time
+                  params:
+                    vis: '{recipe.ms}'
+                    timerange: '{recipe.timerange}'
+                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
+                    datacolumn: DATA
+
