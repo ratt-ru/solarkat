@@ -1,6 +1,6 @@
 _include:
   - (quartical)stimela_cabs.yaml
-  # - (cubical)stimela/stimela_cabs.yaml
+  
 
 ## this augments the standard 'cabs' config section
 cabs:
@@ -89,15 +89,35 @@ cabs:
         dtype: str 
         default: 'corrected_data'
       outputvis:
-        dtype: Directory
-        mkdir: true
+        dtype: str
+        required: true 
+
+
+  splitms_scan:
+    command: split
+    flavour: casa-task
+    inputs:
+      vis: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      scan:
+        dtype: str
+        info: "scan number range"
+        default: 'all'
+      datacolumn:
+        dtype: str 
+        default: 'corrected_data'
+      outputvis:
+        dtype: str
         required: true 
 
 
   splitms_time:
-    command: casa --nogui --log2term -c 'split(vis="{current.ms}", outputvis="{current.outputvis}", timerange="{current.timerange}", datacolumn="{current.datacolumn}")'
+    command: split
+    flavour: casa-task
     inputs:
-      ms: 
+      vis: 
         dtype: MS
         required: true
         default: '{recipe.ms}'
@@ -109,9 +129,10 @@ cabs:
         dtype: str 
         default: 'corrected_data'
       outputvis:
-        dtype: Directory
-        mkdir: true
+        dtype: str
+        default: '{recipe.ms}-output'
         required: true 
+
   
   print_uniq_column_values:
     command: "python3 -c 'from casacore.tables import table; import sys; print(len(set(table(sys.argv[1]).getcol(sys.argv[2]))),sys.argv[3]);'"
@@ -476,18 +497,20 @@ cabs:
         dtype: File
 
   perscan_timerange_intervals:
-    command: (find_sun_stimela)perscan_timerange_intervals
+    command: find_sun_stimela.perscan_timerange_intervals
+    flavour:
+      kind: python
     inputs:
+      scan_list:
+        dtype: MS
       interval:
         dtype: int
         required: true
-      scan_list:
-         dtype: list[MS]
-    outputs:
-      outfile:
-        dtype: File
-   
+    outputs:  
+      timeranges:
+        dtype: List[str]
 
+   
   backup_UVW:
     command: (find_sun_stimela)backup_UVW
     inputs:
@@ -508,6 +531,7 @@ cabs:
         dtype: str
         required: true
 
+        
   sun_coordinates:
     command: (find_sun_stimela)sun_coordinates
     inputs:
@@ -517,9 +541,11 @@ cabs:
     outputs:
       outfile:
         dtype: File
+      coordinate:
+        dtype: str
 
   shift_to_sun:
-    command: (find_sun_stimela)shift_to_sun
+    command: find_sun_stimela.shift_to_sun
     inputs:
       ms:
         dtype: MS
@@ -757,4 +783,48 @@ lib:
           K.time_interval: 1
           K.freq_interval: 0
           K.type: delay
+
+
+
+    split_timeranges:
+      command: |  
+        from pyrap.tables import table
+        from astropy.time import Time
+        import numpy as np
+        dic={ "-": "/", " ":"/"}
+
+        def replace_all(text, dic):
+            
+            for i, j in dic.items():
+                text = text.replace(i, j)
+            return text
+
+        array=[]
+        timerange_array=[]
+        tb = table(scan_list)
+        all_times = list(np.unique(tb.getcol('TIME')))
+        t0 = all_times[0]
+        t1 = all_times[-1]
+        dt = (t1-t0)/(interval)
+        for i in range(interval):
+            t2=dt*i+t0
+            t_iso = Time(t2/86400.0,format='mjd').iso
+            array.append(t_iso)
+        for i in range(len(array)):
+          if i < (len(array)-1):
+              timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
+              timerange_array.append(timerange)
+          else:
+              print()
+        timeranges=timerange_array
+        print(timerange_array)
+      flavour: python-code
+      inputs:
+        scan_list:
+          dtype: MS
+        interval:
+          dtype: int
+      outputs:  
+        timeranges:
+          dtype: List[str]  
 
