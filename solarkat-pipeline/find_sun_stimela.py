@@ -59,8 +59,8 @@ def sun_coordinates(ms,outfile):
             sun_ra = sun.ra.value
         sun_dec = sun.dec.value
         sun_hms=format_coords(sun_ra,sun_dec)
-        print(sun_hms[0],sun_dms[1])
-        lines.append(sun_hms[0]+' '+sun_dms[1])
+        print(sun_hms[0],sun_hms[1])
+        lines.append(sun_hms[0]+' '+sun_hms[1])
     print(lines)
 
     with open(outfile,'wt') as f:
@@ -84,38 +84,36 @@ def shift_to_sun(ms,sun_coords,splitted_ms_dir):
             UVW_old=maintab.getcol('UVW_backup')
 
 
-def perscan_timerange_intervals(interval,ms_list,outfile):
+def perscan_timerange_intervals(interval,scan_list):
 
+    dic={ "-": "/", " ":"/"}
+
+    def replace_all(text, dic):
+        
+        for i, j in dic.items():
+            text = text.replace(i, j)
+        return text
+
+    array=[]
+    timerange_array=[]
+    tb = table(scan_list)
+    all_times = list(np.unique(tb.getcol('TIME')))
+    t0 = all_times[0]
+    t1 = all_times[-1]
+    dt = (t1-t0)/(interval)
+    for i in range(interval):
+        t2=dt*i+t0
+        t_iso = Time(t2/86400.0,format='mjd').iso
+        array.append(t_iso)
+    for i in range(len(array)):
+        if i < (len(array)-1):
+            timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
+            timerange_array.append(timerange)
+        else:
+            print()
+    timeranges=timerange_array
+    print(timerange_array)
+            
   
-  dic={ "-": "/", " ":"/"}
-
-  def replace_all(text, dic):
-      
-      for i, j in dic.items():
-          text = text.replace(i, j)
-      return text
-
-  array=[]
-  timerange_array=[]
-  tb = table(ms)
-  all_times = list(numpy.unique(tb.getcol('TIME')))
-  t0 = all_times[0]
-  t1 = all_times[-1]
-  dt = (t1-t0)/(interval)
-  for i in range(interval):
-      t2=dt*i+t0
-      t_iso = Time(t2/86400.0,format='mjd').iso
-      array.append(t_iso)
-  for i in range(len(array)):
-    if i < (len(array)-1):
-        timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
-        timerange_array.append(timerange)
-    else:
-        print(timerange_array)
-
-    with open(outfile,'wt') as f:
-        for line in timerange_array:
-            f.write(line)
-            f.writelines('\n')
-
-
+            
+   
