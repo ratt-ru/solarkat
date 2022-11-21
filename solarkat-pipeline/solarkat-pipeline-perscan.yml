@@ -326,6 +326,6 @@ solarkat:
                   params:
                     vis: '{recipe.ms}'
                     timerange: '{recipe.timerange}'
-                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
+                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}' # add to outputvis {recipe.dir_out}/{recipe.pertime_dir_out}/
                     datacolumn: DATA
 
