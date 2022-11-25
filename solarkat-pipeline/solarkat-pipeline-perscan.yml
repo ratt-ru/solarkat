@@ -1,5 +1,6 @@
 _include:
   - omstimelation/oms-cabs.yml 
+ 
 
 # # override default imaging settings from oms-cabs
 lib:
@@ -45,7 +46,7 @@ opts:
     symlink: log
 
 
-solarkat:
+boom:
   name: boom
   info: "imaging of deep transient follow-up"
 
@@ -57,26 +58,15 @@ solarkat:
       L1:
         ms: MIGHTEE_CDFS_raw-J0333_2741-corr.ms
         dir_out: obs1lb
-        perscan_dir_out: perscan_ms1
+        perscan_dir_out: perscan_ms
+        pertime_dir_out: pertime_ms
+        perscan_ms_name: MIGHTEE_CDFS_raw-J0333_2741-corr-split.ms
         sun_images: image_sun
         band: L
-      L2:
-        ms: 1645272078_sdp_l0_1024ch_J0333-2741.ms
-        dir_out: obs2lb
-        perscan_dir_out: perscan_ms2
-        sun_images: image_sun
-        band: L
-      UHF:
-        ms: 1583662427_sdp_l0.1024ch-J033230_280757-corr.ms
-        dir_out: obsuhf
-        perscan_dir_out: perscans_ms3
-        sun_images: image_sun
-        band: UHF
-    
   
   inputs:
     obs:
-      choices: [L1, L2, UHF]
+      choices: [L1]
       info: "Selects observation, see labels above"
     suffix:
       dtype: str
@@ -90,7 +80,8 @@ solarkat:
       default: '_scan_'
     ms_list:
       dtype: List[MS]
-
+    
+     
   steps:
     image-1:
       info: "auto-masked deep I clean"
@@ -122,7 +113,7 @@ solarkat:
       params:
         ms: '{recipe.ms}'
         name: "after 1GC"
-        mode: save 
+        mode: save
     
     restore-flags-1: 
       cab: flagman
@@ -131,23 +122,23 @@ solarkat:
         name: "after 1GC"
         mode: restore
    
-    quartical_1:
-      cab: quartical
-      info: "Peel off axis source"
-      params:
-        input_ms.path: '{recipe.ms}'
-        solver.terms: [K]
-        K.type: phase
-        K.direction_dependent: false
-        K.freq_interval: '0'
-        K.time_interval: '4' 
-        K.initial_estimate: true
-        input_ms.time_chunk: '128'
-        solver.iter_recipe: [100]
-        input_model.recipe: MODEL_DATA
-        output.overwrite: 'true'
-        output.products: [corrected_data]
-        output.columns: [SELFCAL_DATA]
+    # quartical_1:
+    #   cab: quartical
+    #   info: "Peel off axis source"
+    #   params:
+    #     input_ms.path: '{recipe.ms}'
+    #     solver.terms: [K]
+    #     K.type: phase
+    #     K.direction_dependent: false
+    #     K.freq_interval: '0'
+    #     K.time_interval: '4' 
+    #     K.initial_estimate: true
+    #     input_ms.time_chunk: '128'
+    #     solver.iter_recipe: [100]
+    #     input_model.recipe: MODEL_DATA
+    #     output.overwrite: 'true'
+    #     output.products: [corrected_data]
+    #     output.columns: [SELFCAL_DATA]
 
     save-flags-2: 
       cab: flagman
@@ -180,7 +171,7 @@ solarkat:
         column: SELFCAL_DATA
         temp_dir: temp_dir
         save-source-list: true
-        fits-mask: "{previous.mask"
+        fits-mask: "{previous.mask}"
         niter: 1000000
         multiscale: false
  
@@ -197,13 +188,31 @@ solarkat:
         ms: '{recipe.ms}'
         UVW_colname: 'UVW'
 
+
     split_ms_by_scan:
-      cab: splitms
+      cab: 
+        command: |
+          tb.open(ms)
+          scans=sorted(set(tb.getcol('SCAN_NUMBER')))
+          tb.done()
+          for scan in scans:
+              scan = str(scan)
+              SPLITED_ms=ms.replace('.ms','_scan'+scan+'.ms')
+              split(vis=ms,outputvis='scansuhf/perscan_ms/'+SPLITED_ms,scan=scan, datacolumn='all')
+              print(SPLITED_ms + 'DONE')
+        flavour: casa-task
+        inputs:
+          ms:
+            dtype: MS
+          scan:
+            dtype: str
+        outputs:
+          outputvis:
+            dtype: MS
       params:
         ms: '{recipe.ms}'
-        outputvis: '{recipe.dir_out}/{recipe.perscan_dir_out}'
-        scan: 'all'
-        datacolumn: 'all'
+        scan: ''
+
 
     sun_coordinates:
       cab: sun_coordinates
@@ -216,12 +225,12 @@ solarkat:
       params:
         ms: '{recipe.ms}'
         sun_coords: '{previous.outfile}'
-        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}'
  
         
     image_sun:
       params:
-        ms_list:  =GLOB("{steps.split_ms_by_scan.outputvis}/*scan*.ms") # insert folder path then glob#         
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") # insert folder path then glob#         
         image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
       recipe:
         inputs:
@@ -238,15 +247,17 @@ solarkat:
            params:
              ms: '{recipe.mss}'
              prefix: '{recipe.image-prefix}'
-             column: SELFCAL_DATA
+             column: DATA
              temp_dir: temp_dir
-             niter: 0
+             niter: 1
              multiscale: false
              subtract-model: true
+   
 
 #--------------------------------------------------------#
 #split individual scans further by time#
 #--------------------------------------------------------#
+
 
     split_ms_by_time:
       params:
@@ -262,7 +273,7 @@ solarkat:
           var: mss
           over: ms_list
         steps:
-          perscan_get_timeranges:
+          perscan_get_timeranges: 
             cab: 
               command: |  
                 from pyrap.tables import table
@@ -326,6 +337,94 @@ solarkat:
                   params:
                     vis: '{recipe.ms}'
                     timerange: '{recipe.timerange}'
-                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}' # add to outputvis {recipe.dir_out}/{recipe.pertime_dir_out}/
-                    datacolumn: DATA
+                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
+                    datacolumn: DATA  
+                  
+    sun_coordinates_by_time:
+      params:
+        timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
+      recipe:
+        inputs:
+          timerange_ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: timerange_ms_list
+        steps:
+          sun_coordinates:
+            cab:  
+              command: |
+                from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
+                from astropy.coordinates import get_body_barycentric, get_body, get_moon
+                from pyrap.tables import table
+                import numpy
+                from astropy.time import Time
+                from astropy.coordinates import SkyCoord
+                from astropy import units as u
 
+                def format_coords(ra0,dec0):
+                  c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
+                  hms = str(c.ra.to_string(u.hour))
+                  dms = str(c.dec)
+                  return hms,dms
+
+                # MeerKAT
+                obs_lat = -30.71323598930457
+                obs_lon = 21.443001467965008
+                loc = EarthLocation.from_geodetic(obs_lat,obs_lon) #,obs_height,ellipsoid)
+                maintab = table(ms,ack=False)
+                scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+                lines=[]
+                t_scan = numpy.mean(maintab.getcol('TIME'))
+                t = Time(t_scan/86400.0,format='mjd')
+                with solar_system_ephemeris.set('builtin'):
+                    sun = get_body('Sun', t, loc)
+                    sun_ra = sun.ra.value
+                sun_dec = sun.dec.value
+                sun_hms=format_coords(sun_ra,sun_dec)
+                sun_coordinates=str(sun_hms)
+                print(sun_coordinates)
+              flavour: python-code
+              inputs:
+                ms:
+                  dtype: MS
+              outputs:  
+                sun_coordinates:
+                  dtype: str
+            params:
+              ms: '{recipe.mss}'            
+          shift_to_sun:
+            cab:
+              command: |
+                import numpy
+                from pyrap.tables import table
+                import sys, os
+                maintab = table(ms,ack=False)
+                os.system(f"chgcentre {ms} {sun_coordinate}")
+                UVW_new=maintab.getcol('UVW')
+                #UVW_old=maintab.getcol('UVW_backup')
+                #print(UVW_new,'Old UVW are:')
+                print(UVW_new,'New UVW are:')
+              flavour: python-code
+              inputs:
+                ms:
+                  dtype: MS
+                  required: true
+                sun_coordinate:
+                  dtype: str
+            params:
+              ms: '=steps.sun_coordinates.ms'
+              sun_coordinate: '=steps.sun_coordinates.sun_coordinates'
+          
+
+
+     
+
+
+
+
+
+
+  
