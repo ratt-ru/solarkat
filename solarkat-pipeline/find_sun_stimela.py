@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# ian.heywood@physics.ox.ac.uk
 
 import numpy as np
 import logging
@@ -69,19 +68,22 @@ def sun_coordinates(ms,outfile):
            f.writelines('\n')
  
 def shift_to_sun(ms,sun_coords,splitted_ms_dir):
+    sun_coordinates=[]
     maintab = table(ms,ack=False)
     scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+    with open(sun_coords) as f:
+        lines = f.readlines()
+    for line in lines:
+        sun_coordinates.append(line)
+        
     for scan in scans:
-      splitted_ms=splitted_ms_dir+ ms.replace(".ms","_scan"+str(scan)+".ms")
-      with open(sun_coords) as f:
-          lines = f.readlines()
-          for line in lines:
-            os.system(f"chgcentre {splitted_ms} {line}")
-            print('scan'+str(scan)+ ' Done')
-            print(UVW_new,'Old UVW are:')
-            UVW_new=maintab.getcol('UVW')
-            print(UVW_new,'New UVW are:')
-            UVW_old=maintab.getcol('UVW_backup')
+        splitted_ms=splitted_ms_dir+ ms.replace(".ms","_scan"+str(scan)+".ms")    
+        os.system(f"chgcentre {splitted_ms} {sun_coordinates[scan]}")
+        print('scan'+str(scan)+ ' Done')
+        UVW_new=maintab.getcol('UVW')
+        UVW_old=maintab.getcol('UVW_backup')
+        print('New UVW are:',UVW_new)
+        print('Old UVW are:',UVW_old)
 
 
 def perscan_timerange_intervals(interval,scan_list):
