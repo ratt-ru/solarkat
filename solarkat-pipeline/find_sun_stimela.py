@@ -115,6 +115,16 @@ def perscan_timerange_intervals(interval,scan_list):
             print()
     timeranges=timerange_array
     print(timerange_array)
+    
+def scan_numbers(ms):
+    from casacore.tables import table
+    import numpy
+    scans=[]
+    maintab = table(ms,ack=False)
+    scan_no = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+    for scan in scan_no:
+        scans.append(str(scan))
+    print(scans)
             
   
             

@@ -1,12 +1,12 @@
 _include:
-  - (quartical)stimela_cabs.yaml
-  
+   - (quartical)stimela_cabs.yaml
+  # - (cubical)stimela/stimela_cabs.yaml
 
 ## this augments the standard 'cabs' config section
 cabs:
   wsclean:
     image: ''
-    command: /usr/bin/wsclean
+    command: wsclean
 
   dummy:
     image: ''
@@ -30,7 +30,114 @@ cabs:
       dir:
         dtype: str
         policies:
-          positional: true/stimel
+          positional: true
+
+  cubical:
+    command: gocubical
+    virtual_env: ~/venv/cubical
+    policies:
+      prefix: '--'
+      replace: {'_': '-'}
+      explicit_true: 'True'
+      explicit_false: 'False'
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+        writable: true
+        nom_de_guerre: data-ms
+      parset:
+        dtype: str
+        policies:
+          positional_head: true
+      data_column:
+        dtype: str
+      data_time_chunk:
+        dtype: int
+      data_freq_chunk:
+        dtype: int
+      model_list:
+        dtype: str
+      model_null_v:
+        dtype: int
+      model_pa_rotate:
+        dtype: bool
+      model_feed_rotate:
+        dtype: str
+      sol_jones:
+        dtype: List[str]
+        policies:
+          repeat: ","
+      sol_term_iters:
+        dtype: List[int]
+        policies:
+          repeat: ","
+      k_solvable:
+        dtype: bool
+      k_type:
+        dtype: str
+      k_time_int:
+        dtype: int
+      k_freq_int:
+        dtype: int
+      k_dd_term:
+        dtype: int
+      k_update_type:
+        dtype: str
+      x_solvable:
+        dtype: bool
+      x_xfer_from:
+        dtype: File
+      madmax_threshold:
+        dtype: float
+      madmax_global_threshold:
+        dtype: float
+      out_column:
+        dtype: str
+      out_mode:
+        choices: [sc, sr, so, ac, ar]
+      out_dir:
+        dtype: str
+      out_name:
+        dtype: str
+      out_subtract_dirs:
+        dtype: str
+      dist_ncpu:
+        dtype: int
+      debug_pdb:
+        dtype: bool
+        default: false
+
+  cubical_gain_plots:
+    command: plot-gain-solutions
+    virtual_env: ~/.venv/cc
+    policies:
+      prefix: '--'
+      replace: {'_': '-'}
+    inputs:
+      table:
+        dtype: File
+        required: true
+        policies:
+          positional: true
+      parameter:
+        dtype: str
+      label:
+        dtype: str
+      gain:
+        dtype: bool
+      bandpass:
+        dtype: bool
+      leakage:
+        dtype: bool
+      diag:
+        choices: [ri, ap, none]
+      off_diag:
+        choices: [ri, ap, none]
+      nrow:
+        dtype: int
+      ncol:
+        dtype: int
 
   mv:
     command: mv
@@ -89,29 +196,9 @@ cabs:
         dtype: str 
         default: 'corrected_data'
       outputvis:
-        dtype: str
+        dtype: Directory
+        mkdir: true
         required: true 
-
-
-  splitms_scan:
-    command: split
-    flavour: casa-task
-    inputs:
-      vis: 
-        dtype: MS
-        required: true
-        default: '{recipe.ms}'
-      scan:
-        dtype: str
-        info: "scan number range"
-        default: 'all'
-      datacolumn:
-        dtype: str 
-        default: 'corrected_data'
-      outputvis:
-        dtype: str
-        required: true 
-
 
   splitms_time:
     command: split
@@ -133,6 +220,28 @@ cabs:
         default: '{recipe.ms}-output'
         required: true 
 
+
+
+
+  splitms_scan:
+    command: split
+    flavour: casa-task
+    inputs:
+      vis: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      scan:
+        dtype: str
+        info: "scan number range"
+        default: 'all'
+      datacolumn:
+        dtype: str 
+        default: 'corrected_data'
+      outputvis:
+        dtype: str
+        default: '{recipe.ms}-output'
+        required: true 
   
   print_uniq_column_values:
     command: "python3 -c 'from casacore.tables import table; import sys; print(len(set(table(sys.argv[1]).getcol(sys.argv[2]))),sys.argv[3]);'"
@@ -147,7 +256,6 @@ cabs:
       label:
         default: 'timeslots'
 
- 
   stack_freq_cube:
     command: fitstool.py
     inputs:
@@ -240,7 +348,7 @@ cabs:
 
   crystalball:
     command: crystalball
-    #virtual_env: ~/venv/crystalball
+    virtual_env: ~/venv/crystalball
     policies:
       prefix: '--'
       replace: {'_': '-'}
@@ -496,21 +604,19 @@ cabs:
       outimage:
         dtype: File
 
-  perscan_timerange_intervals:
-    command: find_sun_stimela.perscan_timerange_intervals
-    flavour:
-      kind: python
+  split_ms:
+    command: casa -c (split_ms)
     inputs:
-      scan_list:
-        dtype: MS
       interval:
         dtype: int
         required: true
-    outputs:  
-      timeranges:
-        dtype: List[str]
+      ms:
+        dtype: MS
+        required: true
+    outputs:
+      outfile:
+        dtype: File
 
-   
   backup_UVW:
     command: (find_sun_stimela)backup_UVW
     inputs:
@@ -531,9 +637,9 @@ cabs:
         dtype: str
         required: true
 
-        
   sun_coordinates:
-    command: (find_sun_stimela)sun_coordinates
+    command: find_sun_stimela.sun_coordinates
+    flavour: python
     inputs:
       ms:
         dtype: MS
@@ -541,11 +647,25 @@ cabs:
     outputs:
       outfile:
         dtype: File
-      coordinate:
-        dtype: str
+
+
+  scan_numbers:
+    command: find_sun_stimela.scan_numbers
+    flavour: python
+    inputs:
+      ms: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+    outputs:
+      scans:
+        dtype: List[str]
+
+   
 
   shift_to_sun:
     command: find_sun_stimela.shift_to_sun
+    flavour: python
     inputs:
       ms:
         dtype: MS
@@ -555,20 +675,30 @@ cabs:
       splitted_ms_dir:
         dtype: Directory
         mkdir: true
-    outputs:
-      outfile:
-        dtype: File
+ 
+
+  perscan_timerange_intervals:
+    command: find_sun_stimela.perscan_timerange_intervals
+    inputs:
+      scan_list:
+        dtype: MS
+      interval:
+        dtype: int
+    outputs:  
+      timeranges:
+        dtype: List[str] 
+    flavour: python
 
   extract_fits_timestamps:
     command: (image_utils)extract_fits_timestamps
     inputs:
-      interval:
-        dtype: int
+      images:
+        dtype: List[File]
         required: true
     outputs:
       outfile:
         dtype: File
- 
+
   extract_light_curves:
     command: (image_utils)extract_light_curves
     inputs:
@@ -601,6 +731,67 @@ cabs:
       regfile:
         dtype: File
 
+  # flagman:
+  #   command: casa --nogui --log2term -c 'flagmanager(vis="{current.ms}", mode="{current.mode}", versionname="{current.name}")'
+  #   policies:
+  #     skip: true
+  #   inputs:
+  #     ms: 
+  #       dtype: MS
+  #       required: true
+  #     name:
+  #       info: "flag version name"
+  #       required: true
+  #     mode: 
+  #       choices: [save, restore]
+  #       default: restore  
+
+  flagsummary:
+    command: casa --nogui --log2term -c 'flagdata(vis="{current.ms}", mode="summary", spw="{current.spw}")' 
+    policies:
+      skip: true
+    inputs:
+      ms: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      spw:
+        dtype: str
+        default: all
+
+  smops:
+    command: smops --ms {current.ms}
+    policies:
+      prefix: '-'
+    inputs:
+      od:
+        dtype: Directory
+        mkdir: true
+        must_exist: false
+      nthreads:
+        dtype: int
+      stokes:
+        dtype: str
+        default: I
+      ms:
+        dtype: MS
+        policies:
+          skip: true
+      ip:
+        required: true
+        dtype: str
+      co:
+        required: true
+        dtype: int
+      order:
+        dtype: int
+
+    outputs:
+      model-prefix:
+        implicit: =IFSET(current.od,SELF,'.') + "/" + BASENAME(current.ip)
+      model:
+        dtype: List[File]
+        implicit: =GLOB("{current.model-prefix}*model*fits")
 
 lib:
   steps:
@@ -615,7 +806,7 @@ lib:
           #nwlayers_factor: 12
           nchan: 8
           temp_dir: /net/ike/vault-ike/kincaid/jovial_run/temp_dir
-          #use_wgridder: false
+          use-wgridder: true
           #log_time: true
           ms: '{recipe.ms}'
           prefix: '{recipe.image-prefix}'  
@@ -656,8 +847,8 @@ lib:
         info: "wsclean step for IQUV imaging"
         cab: wsclean_pol
         params:
-          join_polarizations: true
-          fit_spectral_pol: 
+          join-polarizations: true
+          fit-spectral-pol: 
           pol: IQUV
 
       image_pol2:
@@ -685,7 +876,7 @@ lib:
         info: "wsclean step for predicting an IQ model"
         params:
           pol: IQUV
-  
+
     ddfacet:
       base:
         cab: ddfacet-0
@@ -763,7 +954,7 @@ lib:
           input_ms.time_chunk: '16'
           input_ms.freq_chunk: '0'
           input_ms.group_by: [SCAN_NUMBER,FIELD_ID,DATA_DESC_ID]
-          input_ms.select_uv_range: [150, 0]
+          input_ms.select_uv_range: [0, 0]
           input_ms.select_corr: [0, 3]
           input_model.apply_p_jones: false
           solver.terms: [K]
@@ -785,46 +976,4 @@ lib:
           K.type: delay
 
 
-
-    split_timeranges:
-      command: |  
-        from pyrap.tables import table
-        from astropy.time import Time
-        import numpy as np
-        dic={ "-": "/", " ":"/"}
-
-        def replace_all(text, dic):
-            
-            for i, j in dic.items():
-                text = text.replace(i, j)
-            return text
-
-        array=[]
-        timerange_array=[]
-        tb = table(scan_list)
-        all_times = list(np.unique(tb.getcol('TIME')))
-        t0 = all_times[0]
-        t1 = all_times[-1]
-        dt = (t1-t0)/(interval)
-        for i in range(interval):
-            t2=dt*i+t0
-            t_iso = Time(t2/86400.0,format='mjd').iso
-            array.append(t_iso)
-        for i in range(len(array)):
-          if i < (len(array)-1):
-              timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
-              timerange_array.append(timerange)
-          else:
-              print()
-        timeranges=timerange_array
-        print(timerange_array)
-      flavour: python-code
-      inputs:
-        scan_list:
-          dtype: MS
-        interval:
-          dtype: int
-      outputs:  
-        timeranges:
-          dtype: List[str]  
 
