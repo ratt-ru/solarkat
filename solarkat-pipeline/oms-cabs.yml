@@ -221,8 +221,6 @@ cabs:
         required: true 
 
 
-
-
   splitms_scan:
     command: split
     flavour: casa-task
@@ -687,7 +685,24 @@ cabs:
     outputs:  
       timeranges:
         dtype: List[str] 
-    flavour: python
+    flavour:
+      kind: python
+      output: timeranges
+    
+    
+  pertime_sun_coordinates:
+    command: find_sun_stimela.pertime_sun_coordinates
+    inputs:
+      ms:
+        dtype: MS
+    outputs:  
+      sun_coordinates:
+        dtype: str 
+    flavour:
+      kind: python
+      output: sun_coordinates
+
+
 
   extract_fits_timestamps:
     command: (image_utils)extract_fits_timestamps
