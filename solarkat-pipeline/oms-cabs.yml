@@ -32,6 +32,9 @@ cabs:
         policies:
           positional: true
 
+
+
+
   cubical:
     command: gocubical
     virtual_env: ~/venv/cubical
@@ -808,6 +811,12 @@ cabs:
         dtype: List[File]
         implicit: =GLOB("{current.model-prefix}*model*fits")
 
+
+
+
+
+
+
 lib:
   steps:
     wsclean:
@@ -825,7 +834,7 @@ lib:
           #log_time: true
           ms: '{recipe.ms}'
           prefix: '{recipe.image-prefix}'  
-           
+        
 
       dirty:
         _use: lib.steps.wsclean.base
@@ -935,6 +944,29 @@ lib:
           SSD2-PolyFreqOrder: 3 
           Mask-Auto: true
           Facets-CatNodes: none # ds9.reg.ClusterCat.npy
+
+    recipes:
+      make_masks:
+        name: make_masks
+        info: "makes a series of mask images based on a restored image"
+        inputs:
+          prefix:
+            dtype: str
+
+        aliases:
+          restored_image: mask.restored-image
+          threshold: mask.threshold
+          dilate: mask.dilate
+          mask: mask.mask
+        defaults:
+          threshold: 6.5
+          dilate: 2
+      
+      steps:
+        mask:
+          cab: breizorro
+          params:
+            mask: '{recipe.prefix}-mask.fits'
 
     killms:
       base:
