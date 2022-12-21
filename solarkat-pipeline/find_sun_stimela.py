@@ -126,6 +126,37 @@ def scan_numbers(ms):
         scans.append(str(scan))
     print(scans)
             
-  
+def pertime_sun_coordinates(ms):
+    from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
+    from astropy.coordinates import get_body_barycentric, get_body, get_moon
+    from pyrap.tables import table
+    import numpy
+    from astropy.time import Time
+    from astropy.coordinates import SkyCoord
+    from astropy import units as u
+
+    def format_coords(ra0,dec0):
+        c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
+        hms = str(c.ra.to_string(u.hour))
+        dms = str(c.dec)
+        return hms,dms
+
+    # MeerKAT
+    obs_lat = -30.71323598930457
+    obs_lon = 21.443001467965008
+    loc = EarthLocation.from_geodetic(obs_lat,obs_lon) #,obs_height,ellipsoid)
+    maintab = table(ms,ack=False)
+    scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+    lines=[]
+    t_scan = numpy.mean(maintab.getcol('TIME'))
+    t = Time(t_scan/86400.0,format='mjd')
+    with solar_system_ephemeris.set('builtin'):
+        sun = get_body('Sun', t, loc)
+        sun_ra = sun.ra.value
+    sun_dec = sun.dec.value
+    sun_hms=format_coords(sun_ra,sun_dec)
+    sun_coordinates=str(sun_hms)
+    print(sun_coordinates)
+    return sun_coordinates
             
    
