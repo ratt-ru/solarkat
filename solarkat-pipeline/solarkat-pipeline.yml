@@ -101,23 +101,23 @@ boom:
         name: "after 1GC"
         mode: restore
    
-    # quartical_1:
-    #   cab: quartical
-    #   info: "Peel off axis source"
-    #   params:
-    #     input_ms.path: '{recipe.ms}'
-    #     solver.terms: [K]
-    #     K.type: phase
-    #     K.direction_dependent: false
-    #     K.freq_interval: '0'
-    #     K.time_interval: '4' 
-    #     K.initial_estimate: true
-    #     input_ms.time_chunk: '128'
-    #     solver.iter_recipe: [100]
-    #     input_model.recipe: MODEL_DATA
-    #     output.overwrite: 'true'
-    #     output.products: [corrected_data]
-    #     output.columns: [SELFCAL_DATA]
+    quartical_1:
+      cab: quartical
+      info: "Peel off axis source"
+      params:
+        input_ms.path: '{recipe.ms}'
+        solver.terms: [K]
+        K.type: phase
+        K.direction_dependent: false
+        K.freq_interval: '0'
+        K.time_interval: '4' 
+        K.initial_estimate: true
+        input_ms.time_chunk: '128'
+        solver.iter_recipe: [100]
+        input_model.recipe: MODEL_DATA
+        output.overwrite: 'true'
+        output.products: [corrected_data]
+        output.columns: [SELFCAL_DATA]
 
     save-flags-2: 
       cab: flagman
@@ -165,12 +165,6 @@ boom:
       params:
         ms: '{recipe.ms}'
         UVW_colname: 'UVW'
-
-
-    # scan_numbers:
-    #   cab: scan_numbers
-    #   params:
-    #     ms: '{recipe.ms}'  
 
 
     scan_numbers:
@@ -264,7 +258,7 @@ boom:
 #--------------------------------------------------------#
 
 
-    split_ms_by_time1:
+    split_ms_by_time:
       params:
         ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") #insert folder path then glob#         
         image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
@@ -306,7 +300,7 @@ boom:
                     datacolumn: DATA
 
 
-    sun_coordinates_by_time1:
+    sun_coordinates_by_time:
       params:
         timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
       recipe:
@@ -330,89 +324,87 @@ boom:
 
 
 
-
-
                   
-    sun_coordinates_by_time:
-      params:
-        timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
-      recipe:
-        inputs:
-          timerange_ms_list:
-            dtype: List[MS]
-          image-prefix:
-            dtype: str
-        for_loop:
-          var: mss
-          over: timerange_ms_list
-        steps:
-          sun_coordinates:
-            cab:  
-              command: |
-                from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
-                from astropy.coordinates import get_body_barycentric, get_body, get_moon
-                from pyrap.tables import table
-                import numpy
-                from astropy.time import Time
-                from astropy.coordinates import SkyCoord
-                from astropy import units as u
+    # sun_coordinates_by_time:
+    #   params:
+    #     timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
+    #   recipe:
+    #     inputs:
+    #       timerange_ms_list:
+    #         dtype: List[MS]
+    #       image-prefix:
+    #         dtype: str
+    #     for_loop:
+    #       var: mss
+    #       over: timerange_ms_list
+    #     steps:
+    #       sun_coordinates:
+    #         cab:  
+    #           command: |
+    #             from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
+    #             from astropy.coordinates import get_body_barycentric, get_body, get_moon
+    #             from pyrap.tables import table
+    #             import numpy
+    #             from astropy.time import Time
+    #             from astropy.coordinates import SkyCoord
+    #             from astropy import units as u
 
-                def format_coords(ra0,dec0):
-                  c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
-                  hms = str(c.ra.to_string(u.hour))
-                  dms = str(c.dec)
-                  return hms,dms
+    #             def format_coords(ra0,dec0):
+    #               c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
+    #               hms = str(c.ra.to_string(u.hour))
+    #               dms = str(c.dec)
+    #               return hms,dms
 
-                # MeerKAT
-                obs_lat = -30.71323598930457
-                obs_lon = 21.443001467965008
-                loc = EarthLocation.from_geodetic(obs_lat,obs_lon) #,obs_height,ellipsoid)
-                maintab = table(ms,ack=False)
-                scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
-                lines=[]
-                t_scan = numpy.mean(maintab.getcol('TIME'))
-                t = Time(t_scan/86400.0,format='mjd')
-                with solar_system_ephemeris.set('builtin'):
-                    sun = get_body('Sun', t, loc)
-                    sun_ra = sun.ra.value
-                sun_dec = sun.dec.value
-                sun_hms=format_coords(sun_ra,sun_dec)
-                sun_coordinates=str(sun_hms)
-                print(sun_coordinates)
-              flavour: python-code
-              inputs:
-                ms:
-                  dtype: MS
-              outputs:  
-                sun_coordinates:
-                  dtype: str
-            params:
-              ms: '{recipe.mss}'   
+    #             # MeerKAT
+    #             obs_lat = -30.71323598930457
+    #             obs_lon = 21.443001467965008
+    #             loc = EarthLocation.from_geodetic(obs_lat,obs_lon) #,obs_height,ellipsoid)
+    #             maintab = table(ms,ack=False)
+    #             scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+    #             lines=[]
+    #             t_scan = numpy.mean(maintab.getcol('TIME'))
+    #             t = Time(t_scan/86400.0,format='mjd')
+    #             with solar_system_ephemeris.set('builtin'):
+    #                 sun = get_body('Sun', t, loc)
+    #                 sun_ra = sun.ra.value
+    #             sun_dec = sun.dec.value
+    #             sun_hms=format_coords(sun_ra,sun_dec)
+    #             sun_coordinates=str(sun_hms)
+    #             print(sun_coordinates)
+    #           flavour: python-code
+    #           inputs:
+    #             ms:
+    #               dtype: MS
+    #           outputs:  
+    #             sun_coordinates:
+    #               dtype: str
+    #         params:
+    #           ms: '{recipe.mss}'   
 
 
 
-    shift_to_sun_pertime:
-      cab:
-        command: |
-          import numpy
-          from pyrap.tables import table
-          import sys, os
-          maintab = table(ms,ack=False)
-          os.system(f"chgcentre {ms} {sun_coordinate}")
-          UVW_new=maintab.getcol('UVW')
-          #UVW_old=maintab.getcol('UVW_backup')
-          #print(UVW_new,'Old UVW are:')
-          print(UVW_new,'New UVW are:')
-        flavour: python-code
-        inputs:
-          ms:
-            dtype: MS
-            required: true
-          sun_coordinate:
-            dtype: str
-      params:
-        ms: '=steps.sun_coordinates.ms'
-        sun_coordinate: '=steps.sun_coordinates.sun_coordinates'
+    # shift_to_sun_pertime:
+    #   cab:
+    #     command: |
+    #       import numpy
+    #       from pyrap.tables import table
+    #       import sys, os
+    #       maintab = table(ms,ack=False)
+    #       os.system(f"chgcentre {ms} {sun_coordinate}")
+    #       UVW_new=maintab.getcol('UVW')
+    #       #UVW_old=maintab.getcol('UVW_backup')
+    #       #print(UVW_new,'Old UVW are:')
+    #       print(UVW_new,'New UVW are:')
+    #     flavour: python-code
+    #     inputs:
+    #       ms:
+    #         dtype: MS
+    #         required: true
+    #       sun_coordinate:
+    #         dtype: str
+    #   params:
+    #     ms: '=steps.sun_coordinates.ms'
+    #     sun_coordinate: '=steps.sun_coordinates.sun_coordinates'
         
 
 
