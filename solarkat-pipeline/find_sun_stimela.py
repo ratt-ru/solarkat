@@ -114,7 +114,11 @@ def perscan_timerange_intervals(interval,scan_list):
         else:
             print()
     timeranges=timerange_array
-    print(timerange_array)
+    print(timeranges)
+    
+    return timeranges
+
+   
     
 def scan_numbers(ms):
     from casacore.tables import table
@@ -125,7 +129,10 @@ def scan_numbers(ms):
     for scan in scan_no:
         scans.append(str(scan))
     print(scans)
-            
+    
+    
+    
+    
 def pertime_sun_coordinates(ms):
     from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
     from astropy.coordinates import get_body_barycentric, get_body, get_moon
@@ -158,5 +165,3 @@ def pertime_sun_coordinates(ms):
     sun_coordinates=str(sun_hms)
     print(sun_coordinates)
     return sun_coordinates
-            
-   
