@@ -347,13 +347,6 @@ boom:
               ms: '{recipe.mss}'
 
 
-
-
-
-
-
-
-
                   
     sun_coordinates_by_time:
       params:
@@ -410,7 +403,6 @@ boom:
                   dtype: str
             params:
               ms: '{recipe.mss}'   
-
 
 
     shift_to_sun_pertime:
@@ -522,7 +514,31 @@ boom:
     #                 datacolumn: DATA  
 
 
-
+    
+    image_sun-2:
+      info: "Sun Imaging through scans"
+      params:
+        ms_list: = GLOB("/scansuhf/perscan_ms/*interval*.ms")         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}'
+              column: CORRECTED_DATA
+              temp_dir: tmp
+              niter: 0
+              mgain: 0.9
+              multiscale: false
+              subtract-model: true
+              #prefix: 'obsuhf/im-sun/scan{recipe.mss@index}'
+              prefix: ="obsuhf/im-sun-time/" + STRIPEXT(BASENAME(recipe.mss))
     
 
 
