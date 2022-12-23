@@ -1,0 +1,502 @@
+_include:
+  - omstimelation/oms-cabs.yml 
+ 
+
+# # override default imaging settings from oms-cabs
+lib:
+  steps:
+    wsclean:
+      base:
+        params:
+          ms: '{recipe.ms}'
+          prefix: '{recipe.image-prefix}'
+          size: 6076
+          scale: 1.5asec
+
+
+
+## this augments the standard 'opts' config section to tweak logging settings
+opts:
+  log:
+    dir: './{root.dir_out}/logs/log-{run.datetime}'
+    name: log-{info.fqname}.txt
+    nest: 2
+    symlink: log
+
+
+boom:
+  name: boom
+  info: "imaging of deep transient follow-up"
+
+  assign:
+    image-prefix: '{recipe.dir_out}/im{info.suffix}/im{info.suffix}{recipe.suffix}'
+    mask-prefix: '{recipe.dir_out}/im{info.suffix}/mask{info.suffix}{recipe.suffix}'
+
+  assign_based_on:
+    obs:
+      L1:
+        ms: MIGHTEE_CDFS_raw-J0333_2741-corr.ms
+        dir_out: obs1lb
+        perscan_dir_out: perscan_ms
+        pertime_dir_out: pertime_ms
+        perscan_ms_name: MIGHTEE_CDFS_raw-J0333_2741-corr-split.ms
+        sun_images: image_sun
+        band: L
+  
+  inputs:
+    obs:
+      choices: [L1]
+      info: "Selects observation, see labels above"
+    suffix:
+      dtype: str
+      default: ''
+    dir_out: 
+      dtype: str
+    ms:
+      dtype: MS
+    splitted_ms_suffix:
+      dtype: str
+      default: '_scan_'
+    ms_list:
+      dtype: List[MS]
+    
+     
+  steps:
+    image-1:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params: 
+        column: DATA
+        temp_dir: temp_dir 
+        save-source-list: false
+
+                
+    mask-1:
+      cab: breizorro 
+      params:
+        restored_image: "{previous.restored-mfs}"
+        mask: '{previous.prefix}-mask.fits'
+        threshold: 20
+
+    image-2:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: DATA
+        fits-mask: "{previous.mask}"
+        temp_dir: temp_dir 
+        save-source-list: false
+
+    save-flags-1: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "after 1GC"
+        mode: save
+    
+    restore-flags-1: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "after 1GC"
+        mode: restore
+   
+    quartical_1:
+      cab: quartical
+      info: "Peel off axis source"
+      params:
+        input_ms.path: '{recipe.ms}'
+        solver.terms: [K]
+        K.type: phase
+        K.direction_dependent: false
+        K.freq_interval: '0'
+        K.time_interval: '4' 
+        K.initial_estimate: true
+        input_ms.time_chunk: '128'
+        solver.iter_recipe: [100]
+        input_model.recipe: MODEL_DATA
+        output.overwrite: 'true'
+        output.products: [corrected_data]
+        output.columns: [SELFCAL_DATA]
+
+    save-flags-2: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "after 2GC"
+        mode: save
+   
+    image-3:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: SELFCAL_DATA
+        temp_dir: temp_dir
+        save-source-list: false
+        fits-mask: "{steps.image-1.prefix}-mask.fits"
+
+    mask-2:
+      cab: breizorro
+      params:
+        restored_image: "{previous.restored-mfs}"
+        mask: '{previous.prefix}-mask.fits'
+        threshold: 5
+
+    image-4:
+      info: "auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: SELFCAL_DATA
+        temp_dir: temp_dir
+        save-source-list: true
+        fits-mask: "{previous.mask}"
+        niter: 1000000
+        multiscale: false
+ 
+    backup_UVW:
+      cab: backup_UVW
+      params:
+        ms: '{recipe.ms}'
+        UVW_colname: 'UVW'
+
+    restore_UVW:
+      cab: restore_UVW
+      skip: true
+      params:
+        ms: '{recipe.ms}'
+        UVW_colname: 'UVW'
+
+
+    scan_numbers:
+      cab:
+        command: |
+          from casacore.tables import table
+          import numpy
+          scans=[]
+          maintab = table(ms,ack=False)
+          scan_no = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+          for scan in scan_no:
+            scans.append(str(scan))
+          print(scans)
+        flavour: python-code
+        inputs:
+          ms:
+            dtype: MS
+        outputs:
+          scans:
+            dtype: List[str]
+      params:
+        ms: '{recipe.ms}'        
+
+
+  
+    split_ms_by_scan:
+      params:
+        scan_list: '=steps.scan_numbers.scans' 
+        ms: '=steps.scan_numbers.ms'
+      recipe:
+        inputs:
+          scan_list:
+            dtype: List[str]
+          ms:
+            dtype: MS
+        for_loop:
+          var: scan
+          over: scan_list
+        steps:         
+          casa_split_scan:
+            cab: splitms_scan
+            params:
+              vis: '{root.ms}'
+              scan: '{recipe.scan}'
+              outputvis: '{root.dir_out}/{root.perscan_dir_out}/{recipe.ms}-scan-{recipe.scan@index}'
+              datacolumn: DATA
+
+
+    sun_coordinates:
+      cab: sun_coordinates
+      params:
+        ms: '{recipe.ms}'
+        outfile: 'sun_coordinates.txt'
+
+    shift_to_sun:
+      cab: shift_to_sun
+      params:
+        ms: '{recipe.ms}'
+        sun_coords: '{previous.outfile}'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}'
+ 
+        
+    image_sun:
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") # insert folder path then glob#         
+        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+           _use: lib.steps.wsclean.image
+           params:
+             ms: '{recipe.mss}'
+             prefix: '{recipe.image-prefix}'
+             column: DATA
+             temp_dir: temp_dir
+             niter: 1
+             multiscale: false
+             subtract-model: true
+   
+
+#--------------------------------------------------------#
+#split individual scans further by time#
+#--------------------------------------------------------#
+
+
+    split_ms_by_time:
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") #insert folder path then glob#         
+        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          perscan_get_timeranges:
+            cab: perscan_timerange_intervals
+            params:
+              scan_list: '{recipe.mss}'
+              interval: 3 
+          loop_timeranges:
+            params: 
+              timeranges: '=steps.perscan_get_timeranges.timeranges'
+              ms: '=steps.perscan_get_timeranges.scan_list'
+            recipe:
+              inputs:
+                ms: 
+                  dtype: MS
+                timeranges:
+                  dtype: List[str]
+              for_loop:
+                var: timerange
+                over: timeranges
+              steps:          
+                Casa-split-time:
+                  cab: splitms_time
+                  params:
+                    vis: '{recipe.ms}'
+                    timerange: '{recipe.timerange}'
+                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
+                    datacolumn: DATA
+
+
+    sun_coordinates_by_time:
+      params:
+        timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
+      recipe:
+        inputs:
+          timerange_ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: timerange_ms_list
+        steps:
+          sun_coordinates:
+            cab:  pertime_sun_coordinates
+            params:
+              ms: '{recipe.mss}'
+
+
+
+
+
+
+
+                  
+    # sun_coordinates_by_time:
+    #   params:
+    #     timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
+    #   recipe:
+    #     inputs:
+    #       timerange_ms_list:
+    #         dtype: List[MS]
+    #       image-prefix:
+    #         dtype: str
+    #     for_loop:
+    #       var: mss
+    #       over: timerange_ms_list
+    #     steps:
+    #       sun_coordinates:
+    #         cab:  
+    #           command: |
+    #             from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
+    #             from astropy.coordinates import get_body_barycentric, get_body, get_moon
+    #             from pyrap.tables import table
+    #             import numpy
+    #             from astropy.time import Time
+    #             from astropy.coordinates import SkyCoord
+    #             from astropy import units as u
+
+    #             def format_coords(ra0,dec0):
+    #               c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
+    #               hms = str(c.ra.to_string(u.hour))
+    #               dms = str(c.dec)
+    #               return hms,dms
+
+    #             # MeerKAT
+    #             obs_lat = -30.71323598930457
+    #             obs_lon = 21.443001467965008
+    #             loc = EarthLocation.from_geodetic(obs_lat,obs_lon) #,obs_height,ellipsoid)
+    #             maintab = table(ms,ack=False)
+    #             scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
+    #             lines=[]
+    #             t_scan = numpy.mean(maintab.getcol('TIME'))
+    #             t = Time(t_scan/86400.0,format='mjd')
+    #             with solar_system_ephemeris.set('builtin'):
+    #                 sun = get_body('Sun', t, loc)
+    #                 sun_ra = sun.ra.value
+    #             sun_dec = sun.dec.value
+    #             sun_hms=format_coords(sun_ra,sun_dec)
+    #             sun_coordinates=str(sun_hms)
+    #             print(sun_coordinates)
+    #           flavour: python-code
+    #           inputs:
+    #             ms:
+    #               dtype: MS
+    #           outputs:  
+    #             sun_coordinates:
+    #               dtype: str
+    #         params:
+    #           ms: '{recipe.mss}'   
+
+
+
+    # shift_to_sun_pertime:
+    #   cab:
+    #     command: |
+    #       import numpy
+    #       from pyrap.tables import table
+    #       import sys, os
+    #       maintab = table(ms,ack=False)
+    #       os.system(f"chgcentre {ms} {sun_coordinate}")
+    #       UVW_new=maintab.getcol('UVW')
+    #       #UVW_old=maintab.getcol('UVW_backup')
+    #       #print(UVW_new,'Old UVW are:')
+    #       print(UVW_new,'New UVW are:')
+    #     flavour: python-code
+    #     inputs:
+    #       ms:
+    #         dtype: MS
+    #         required: true
+    #       sun_coordinate:
+    #         dtype: str
+    #   params:
+    #     ms: '=steps.sun_coordinates.ms'
+    #     sun_coordinate: '=steps.sun_coordinates.sun_coordinates'
+        
+
+
+
+
+    split_ms_by_time2:
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") # insert folder path then glob#         
+        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          image-prefix:
+            dtype: str
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          perscan_get_timeranges: 
+            cab: 
+              command: |  
+                from pyrap.tables import table
+                from astropy.time import Time
+                import numpy as np
+                dic={ "-": "/", " ":"/"}
+
+                def replace_all(text, dic):
+                    
+                    for i, j in dic.items():
+                        text = text.replace(i, j)
+                    return text
+
+                array=[]
+                timerange_array=[]
+                tb = table(scan_list)
+                all_times = list(np.unique(tb.getcol('TIME')))
+                t0 = all_times[0]
+                t1 = all_times[-1]
+                dt = (t1-t0)/(interval)
+                for i in range(interval):
+                    t2=dt*i+t0
+                    t_iso = Time(t2/86400.0,format='mjd').iso
+                    array.append(t_iso)
+                for i in range(len(array)):
+                  if i < (len(array)-1):
+                      timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
+                      timerange_array.append(timerange)
+                  else:
+                      print()
+                timeranges=timerange_array
+                print(timerange_array)
+              flavour: python-code
+              inputs:
+                scan_list:
+                  dtype: MS
+                interval:
+                  dtype: int
+              outputs:  
+                timeranges:
+                  dtype: List[str]  
+            params:
+              scan_list: '{recipe.mss}'
+              interval: 3
+          loop_timeranges:
+            params: 
+              timeranges: '=steps.perscan_get_timeranges.timeranges'
+              ms: '=steps.perscan_get_timeranges.scan_list'
+            recipe:
+              inputs:
+                ms: 
+                  dtype: MS
+                timeranges:
+                  dtype: List[str]
+              for_loop:
+                var: timerange
+                over: timeranges
+              steps:          
+                Casa-split-time:
+                  cab: splitms_time
+                  params:
+                    vis: '{recipe.ms}'
+                    timerange: '{recipe.timerange}'
+                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
+                    datacolumn: DATA  
+
+
+
+    
+
+
+
+
+
+  
