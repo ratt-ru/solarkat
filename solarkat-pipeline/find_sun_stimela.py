@@ -77,7 +77,7 @@ def shift_to_sun(ms,sun_coords,splitted_ms_dir):
         sun_coordinates.append(line)
         
     for scan in scans:
-        splitted_ms=splitted_ms_dir+ ms.replace(".ms","_scan"+str(scan)+".ms")    
+        splitted_ms=splitted_ms_dir+ ms.replace(".ms","_scan_"+str(scan)+".ms")    
         os.system(f"chgcentre {splitted_ms} {sun_coordinates[scan]}")
         print('scan'+str(scan)+ ' Done')
         UVW_new=maintab.getcol('UVW')
