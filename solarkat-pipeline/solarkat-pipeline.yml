@@ -117,7 +117,7 @@ boom:
         input_model.recipe: MODEL_DATA
         output.overwrite: 'true'
         output.products: [corrected_data]
-        output.columns: [SELFCAL_DATA]
+        output.columns: [CORRECTED_DATA]
 
     save-flags-2: 
       cab: flagman
@@ -130,7 +130,7 @@ boom:
       info: "auto-masked deep I clean"
       _use: lib.steps.wsclean.image
       params:
-        column: SELFCAL_DATA
+        column: CORRECTED_DATA
         temp_dir: temp_dir
         save-source-list: false
         fits-mask: "{steps.image-1.prefix}-mask.fits"
@@ -146,7 +146,7 @@ boom:
       info: "auto-masked deep I clean"
       _use: lib.steps.wsclean.image
       params:
-        column: SELFCAL_DATA
+        column: CORRECTED_DATA
         temp_dir: temp_dir
         save-source-list: true
         fits-mask: "{previous.mask}"
@@ -210,7 +210,7 @@ boom:
               vis: '{root.ms}'
               scan: '{recipe.scan}'
               outputvis: '{root.dir_out}/{root.perscan_dir_out}/{recipe.ms}-scan-{recipe.scan@index}'
-              datacolumn: DATA
+              datacolumn: 'all'
 
 
     sun_coordinates:
@@ -246,7 +246,7 @@ boom:
            params:
              ms: '{recipe.mss}'
              prefix: '{recipe.image-prefix}'
-             column: DATA
+             column: CORRECTED_DATA
              temp_dir: temp_dir
              niter: 1
              multiscale: false
@@ -297,7 +297,7 @@ boom:
                     vis: '{recipe.ms}'
                     timerange: '{recipe.timerange}'
                     outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
-                    datacolumn: DATA
+                    datacolumn: 'all'
 
 
     sun_coordinates_by_time:
@@ -489,7 +489,7 @@ boom:
                     vis: '{recipe.ms}'
                     timerange: '{recipe.timerange}'
                     outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
-                    datacolumn: DATA  
+                    datacolumn: 'all'  
 
 
 
