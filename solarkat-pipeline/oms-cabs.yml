@@ -195,7 +195,7 @@ cabs:
         default: 'all'
       datacolumn:
         dtype: str 
-        default: 'corrected_data'
+        default: 'all' #'corrected_data'
       outputvis:
         dtype: Directory
         mkdir: true
@@ -215,7 +215,7 @@ cabs:
         default: 'all'
       datacolumn:
         dtype: str 
-        default: 'corrected_data'
+        default: 'all'
       outputvis:
         dtype: str
         default: '{recipe.ms}-output'
@@ -236,7 +236,7 @@ cabs:
         default: 'all'
       datacolumn:
         dtype: str 
-        default: 'corrected_data'
+        default: 'all'
       outputvis:
         dtype: str
         default: '{recipe.ms}-output'
@@ -617,7 +617,7 @@ cabs:
         dtype: File
 
   backup_UVW:
-    command: (find_sun_stimela)backup_UVW
+    command: find_sun_stimela.backup_UVW
     inputs:
       ms:
         dtype: MS
@@ -627,7 +627,7 @@ cabs:
         required: true
 
   restore_UVW:
-    command: (find_sun_stimela)restore_UVW
+    command: find_sun_stimela.restore_UVW
     inputs:
       ms:
         dtype: MS
