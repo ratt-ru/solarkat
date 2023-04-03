@@ -671,246 +671,323 @@ boom:
 #split individual scans further by time#
 #--------------------------------------------------------#
 
-
-    split_ms_by_time:
+    get_sun_coordinates_by_time: 
+      cab: pertime_sun_coordinates
       params:
-        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") #insert folder path then glob#         
-        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")
+        outfile: '{recipe.dir_out}/sun_coordinates_by_time.txt'
+
+
+    rename_model_data_2:
+      cab: rename_model_data
+      info: 'Renaming the MODEL_DATA visibilities to ORIGINAL_MODEL_DATA'
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")
+
+
+    shift_to_sun_pertime:
+      info: "Rotating the coordinate system to the sun using the WSCLEAN chgcentre command"
+      cab: shift_coords
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")
+        coords: '{recipe.steps.get_sun_coordinates_by_time.outfile}'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.pertime_dir_out}/'
+        datacolumn: 'CORRECTED_DATA'
+
+
+    add_model_data_column-2:
+      cab: add_model_data_column
+      info: "Adding a MODEL_DATA column to the MS/scan"
+      params: 
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")
+        col_name: 'MODEL_DATA'
+        like_col: 'DATA'
+        like_type: None
+
+
+    image_sun_pertime_scans:
+      info: "Making a dirty image of the Sun for a list of pertime_scans"
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")         
       recipe:
         inputs:
           ms_list:
             dtype: List[MS]
-          image-prefix:
-            dtype: str
         for_loop:
           var: mss
           over: ms_list
         steps:
-          perscan_get_timeranges:
-            cab: perscan_timerange_intervals
-            params:
-              scan_list: '{recipe.mss}'
-              interval: 3 
-          loop_timeranges:
-            params: 
-              timeranges: '=steps.perscan_get_timeranges.timeranges'
-              ms: '=steps.perscan_get_timeranges.scan_list'
-            recipe:
-              inputs:
-                ms: 
-                  dtype: MS
-                timeranges:
-                  dtype: List[str]
-              for_loop:
-                var: timerange
-                over: timeranges
-              steps:          
-                Casa-split-time:
-                  cab: splitms_time
-                  params:
-                    vis: '{recipe.ms}'
-                    timerange: '{recipe.timerange}'
-                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
-                    datacolumn: 'all'
-
-
-    sun_coordinates_by_time:
-      params:
-        timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
-      recipe:
-        inputs:
-          timerange_ms_list:
-            dtype: List[MS]
-          image-prefix:
-            dtype: str
-        for_loop:
-          var: mss
-          over: timerange_ms_list
-        steps:
-          sun_coordinates:
-            cab:  pertime_sun_coordinates
+          image:
+            _use: lib.steps.wsclean.image
             params:
               ms: '{recipe.mss}'
+              column: CORRECTED_DATA
+              temp_dir: '{root.dir_out}/tmp'
+              niter: 0
+              size: 6075
+              use-wgridder: true
+              wgridder-accuracy: 1e-6
+              no-update-model-required: false
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.pertime_sun_images}/" + STRIPEXT(BASENAME(recipe.mss))
 
 
-
-
-
-
-
-                  
-    # sun_coordinates_by_time:
-    #   params:
-    #     timerange_ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*")  # insert folder path then glob#         
-    #   recipe:
-    #     inputs:
-    #       timerange_ms_list:
-    #         dtype: List[MS]
-    #       image-prefix:
-    #         dtype: str
-    #     for_loop:
-    #       var: mss
-    #       over: timerange_ms_list
-    #     steps:
-    #       sun_coordinates:
-    #         cab:  
-    #           command: |
-    #             from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
-    #             from astropy.coordinates import get_body_barycentric, get_body, get_moon
-    #             from pyrap.tables import table
-    #             import numpy
-    #             from astropy.time import Time
-    #             from astropy.coordinates import SkyCoord
-    #             from astropy import units as u
-
-    #             def format_coords(ra0,dec0):
-    #               c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
-    #               hms = str(c.ra.to_string(u.hour))
-    #               dms = str(c.dec)
-    #               return hms,dms
-
-    #             # MeerKAT
-    #             obs_lat = -30.71323598930457
-    #             obs_lon = 21.443001467965008
-    #             loc = EarthLocation.from_geodetic(obs_lat,obs_lon) #,obs_height,ellipsoid)
-    #             maintab = table(ms,ack=False)
-    #             scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
-    #             lines=[]
-    #             t_scan = numpy.mean(maintab.getcol('TIME'))
-    #             t = Time(t_scan/86400.0,format='mjd')
-    #             with solar_system_ephemeris.set('builtin'):
-    #                 sun = get_body('Sun', t, loc)
-    #                 sun_ra = sun.ra.value
-    #             sun_dec = sun.dec.value
-    #             sun_hms=format_coords(sun_ra,sun_dec)
-    #             sun_coordinates=str(sun_hms)
-    #             print(sun_coordinates)
-    #           flavour: python-code
-    #           inputs:
-    #             ms:
-    #               dtype: MS
-    #           outputs:  
-    #             sun_coordinates:
-    #               dtype: str
-    #         params:
-    #           ms: '{recipe.mss}'   
-
-
-
-    # shift_to_sun_pertime:
-    #   cab:
-    #     command: |
-    #       import numpy
-    #       from pyrap.tables import table
-    #       import sys, os
-    #       maintab = table(ms,ack=False)
-    #       os.system(f"chgcentre {ms} {sun_coordinate}")
-    #       UVW_new=maintab.getcol('UVW')
-    #       #UVW_old=maintab.getcol('UVW_backup')
-    #       #print(UVW_new,'Old UVW are:')
-    #       print(UVW_new,'New UVW are:')
-    #     flavour: python-code
-    #     inputs:
-    #       ms:
-    #         dtype: MS
-    #         required: true
-    #       sun_coordinate:
-    #         dtype: str
-    #   params:
-    #     ms: '=steps.sun_coordinates.ms'
-    #     sun_coordinate: '=steps.sun_coordinates.sun_coordinates'
-        
-
-
-
-
-    split_ms_by_time2:
+    create_ds9_regions_2:
+      cab: create_ds9_regions
+      info: 'Creating region files for the scans'
       params:
-        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*scan*.ms") # insert folder path then glob#         
-        image-prefix: '{recipe.dir_out}/im-sun{info.suffix}/im{info.suffix}{recipe.suffix}'
+        input_file: '{recipe.steps.get_sun_coordinates_by_time.outfile}'
+        output_dir: '{recipe.dir_out}/{recipe.regions_pertime}'
+
+
+    #create-mask and use to image and deconvolve the Sun in the clean_image_sun step #TO SOLVE directories*
+    
+    make_mask_intervals:      
+      info: 'Creating a fits mask with breizorro'
+      params:
+        image_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/{recipe.pertime_sun_images}/*-MFS-image*.fits")
+        region_dir:  "{recipe.dir_out}/{recipe.regions_pertime}"     
       recipe:
         inputs:
+          region_dir:
+            dtype: Directory
+          image_list:
+            dtype: List[File]
+        for_loop:
+          var: image
+          over: image_list
+        steps:
+          make_mask:
+            cab: breizorro
+            params:
+              restored_image: =recipe.image
+              merge: =recipe.region_dir + "/" + STRIPEXT(BASENAME(recipe.image)) + ".reg"
+              mask: ="{root.dir_out}" + "/" + "{root.masks_pertime}" + "/" + STRIPEXT(BASENAME(recipe.image)) + ".mask.fits"
+              threshold: 9999999999999999999999999999999
+
+
+    clean_image_sun_intervals:
+      info: " clean imaging of the Sun for a better model, Creating the model of the Sun"
+      params:
+        mask_list: =GLOB("{recipe.dir_out}/{recipe.masks_pertime}/*.fits*")
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms") 
+      recipe:
+        inputs:
+          mask_list:
+            dtype: List[File]
           ms_list:
             dtype: List[MS]
-          image-prefix:
-            dtype: str
         for_loop:
           var: mss
           over: ms_list
         steps:
-          perscan_get_timeranges: 
-            cab: 
-              command: |  
-                from pyrap.tables import table
-                from astropy.time import Time
-                import numpy as np
-                dic={ "-": "/", " ":"/"}
-
-                def replace_all(text, dic):
-                    
-                    for i, j in dic.items():
-                        text = text.replace(i, j)
-                    return text
-
-                array=[]
-                timerange_array=[]
-                tb = table(scan_list)
-                all_times = list(np.unique(tb.getcol('TIME')))
-                t0 = all_times[0]
-                t1 = all_times[-1]
-                dt = (t1-t0)/(interval)
-                for i in range(interval):
-                    t2=dt*i+t0
-                    t_iso = Time(t2/86400.0,format='mjd').iso
-                    array.append(t_iso)
-                for i in range(len(array)):
-                  if i < (len(array)-1):
-                      timerange=replace_all(array[i],dic)+'~'+replace_all(array[i+1],dic)
-                      timerange_array.append(timerange)
-                  else:
-                      print()
-                timeranges=timerange_array
-                print(timerange_array)
-              flavour: python-code
-              inputs:
-                scan_list:
-                  dtype: MS
-                interval:
-                  dtype: int
-              outputs:  
-                timeranges:
-                  dtype: List[str]  
+          image:
+            _use: lib.steps.wsclean.image
             params:
-              scan_list: '{recipe.mss}'
-              interval: 3
-          loop_timeranges:
-            params: 
-              timeranges: '=steps.perscan_get_timeranges.timeranges'
-              ms: '=steps.perscan_get_timeranges.scan_list'
-            recipe:
-              inputs:
-                ms: 
-                  dtype: MS
-                timeranges:
-                  dtype: List[str]
-              for_loop:
-                var: timerange
-                over: timeranges
-              steps:          
-                Casa-split-time:
-                  cab: splitms_time
-                  params:
-                    vis: '{recipe.ms}'
-                    timerange: '{recipe.timerange}'
-                    outputvis: '{recipe.ms}-interval-{recipe.timerange@index}'
-                    datacolumn: 'all'  
+              ms: '{recipe.mss}'
+              column: CORRECTED_DATA             
+              size: 6076
+              niter: 1000000
+              multiscale: true
+              fit_spectral_pol: 4
+              join_channels: true
+              #do_continue: true
+              threshold: 3.6e-5 #4.6e-5 
+              auto-threshold: UNSET
+              save-source-list: true 
+              temp_dir: '{root.dir_out}/tmp'
+              no-update-model-required: false
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.mss))
+              fits-mask:  ="{root.dir_out}" + "/" + "{root.masks_pertime}" + "/" + STRIPEXT(BASENAME(recipe.mss)) + "-MFS-image.mask.fits" 
+
+
+    wsclean_predict-2:
+      info: " clean imaging of the Sun for a better model, using the masks created from the make_mask step."      
+      params:
+        ms_list:  =GLOB('{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms') # insert folder path then glob#         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          mask_list:
+            dtype: List[File]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          predict:
+            _use: lib.steps.wsclean.predict       
+            params:
+              ms: '{recipe.mss}'  
+              size: 6076
+              column: UNSET
+              predict: true
+              temp_dir: '{root.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.mss)) 
 
 
 
-    
+    subtract_sun_pertime:
+      info: "Subtract the model of the Sun (MODEL_DATA) from the rephased CORRECTED_DATA and image the CORRECTED_DATA for a list of scans"
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")       
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}'
+              column: CORRECTED_DATA
+              niter: 0
+              size: 6075
+              multiscale: false              
+              use-wgridder: true
+              subtract-model: true
+              auto-threshold: UNSET
+              wgridder-accuracy: 1e-6
+              no-update-model-required: true
+              temp_dir: '{recipe.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.subtr_sun_images}/" + STRIPEXT(BASENAME(recipe.mss))
 
 
+    rephase_ms_to_old_phase_centers_2:
+      info: 'Rephasing the Mss  to the old phase centre' 
+      cab: shift_coords #rephase_ms_to_old_phase_centers
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")
+        coords: '{recipe.steps.get_pertime_old_coords.outfile}'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.pertime_dir_out}/' 
+        datacolumn: 'CORRECTED_DATA' 
 
 
+    subtract_sun_from_visibilities:
+      info: "Subtract the model of the Sun (MODEL_DATA) from the original CORRECTED_DATA after rephasing back"
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms") # insert folder path then glob#         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}'
+              column: CORRECTED_DATA
+              niter: 0
+              size: [32000, 40000]
+              multiscale: false              
+              use-wgridder: true
+              subtract-model: true
+              auto-threshold: UNSET
+              wgridder-accuracy: 1e-6
+              no-update-model-required: true
+              temp_dir: '{root.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.subtract_sun_from_visibilities}/" + STRIPEXT(BASENAME(recipe.mss))
 
-  
+
+    image_subtracted_sun_from_visibilities:
+      info: "Subtract the model of the Sun (MODEL_DATA) from the original CORRECTED_DATA after rephasing back"
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms") # insert folder path then glob#         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}'
+              column: CORRECTED_DATA
+              padding: 2 #1.5
+              niter: 100000 
+              multiscale: true
+              use-wgridder: true
+              size: [32000, 40000]
+              subtract-model: true
+              auto-threshold: 3  
+              wgridder-accuracy: 1e-6
+              #no-update-model-required: true
+              temp_dir: '{recipe.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.subtracted_sun_from_visibilities}/" + STRIPEXT(BASENAME(recipe.mss))
+
+
+    rename_model_and_original_model_data2:
+      cab: rename_columns
+      info: 'Renaming the MODEL_DATA to SUN_MODEL_DATA and ORIGINAL_MODEL_DATA to MODEL_DATA'
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")
+
+
+    quartical_3:
+      info: "Self calibration in the main field with then Sun Subtracted"
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms")
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          Selfcal_vis:            
+            cab: quartical      
+            params:
+              input_ms.path: '{recipe.ms}'
+              solver.terms: [K]
+              K.type: phase
+              K.freq_interval: '0'
+              K.time_interval: '4'
+              K.initial_estimate: true
+              K.direction_dependent: false 
+              output.overwrite: true
+              input_ms.time_chunk: '128'
+              solver.iter_recipe: [100]
+              input_model.recipe: MODEL_DATA
+              output.products: [corrected_data]
+              output.columns: [CORRECTED_DATA]
+
+
+    image_6:
+      info: "Subtract the model of the Sun (MODEL_DATA) from the original visibilities (CORRECTED_DATA)"
+      params:
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.pertime_dir_out}/*interval*.ms") # insert folder path then glob#         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}'
+              column: CORRECTED_DATA  
+              padding: 2 #1.5
+              niter: 100000  
+              multiscale: true
+              auto-threshold: 3
+              use-wgridder: true
+              size: [32000, 40000] #16384      
+              wgridder-accuracy: 1e-6
+              #no-update-model-required: true
+              temp_dir: '{recipe.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.pertime_dir_out}/{root.self_sun_subtracted}/" + STRIPEXT(BASENAME(recipe.mss)) 
+
+
+   
