@@ -462,7 +462,7 @@ boom:
             params:
               ms: '{recipe.mss}'
               column: CORRECTED_DATA
-              temp_dir: '{recipe.dir_out}/tmp'
+              temp_dir: '{root.dir_out}/tmp'
               niter: 1000000
               size: 6076
               join_channels: true
