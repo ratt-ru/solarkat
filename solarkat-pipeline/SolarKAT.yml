@@ -1,0 +1,789 @@
+#!/usr/bin/env -S stimela run
+
+_include:
+  - oms-cabs.yaml 
+ 
+
+cabs:
+  wsclean:
+    inputs:
+      wgridder-accuracy:
+        dtype: float
+      do_continue: 
+        dtype: bool
+        nom_de_guerre: continue
+      nwlayers_factor:
+        dtype: int
+      join_channels:
+        dtype: bool
+      fit_spectral_pol:
+        dtype: int
+      auto-threshold:
+        dtype: str
+
+  breizorro:
+    virtual_env: '/home/samboco/Virtual_enviroments/breizorro_env'
+
+  casa:
+    command: overwrite
+        
+
+# # override default imaging settings from oms-cabs
+lib:
+  steps:
+    wsclean:
+      base:
+        params:
+          ms: '{recipe.ms}'
+          prefix: '{recipe.image-prefix}'
+          size: [16300, 16300]
+          scale: 1.5asec
+
+
+
+## this augments the standard 'opts' config section to tweak logging settings
+opts:
+  log:
+    dir: './{root.dir_out}/logs/log-{run.datetime}'
+    name: log-{info.fqname}.txt
+    nest: 2
+    symlink: log
+
+
+solarkat:
+  name: solarkat
+  info: 'Recipe to Image and mitigate solar interference from Observations'
+
+  assign:
+    image-prefix: '{recipe.dir_out}/im{info.suffix}/im{info.suffix}{recipe.suffix}'
+    mask-prefix: '{recipe.dir_out}/im{info.suffix}/mask{info.suffix}{recipe.suffix}'
+
+  assign_based_on:
+    obs:
+      L1:
+        ms: msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
+        dir_out: obs1
+        perscan_dir_out: "ms_scans"
+        sun_images_dir: "sun_images"
+        regions_dir_out: "region_files"
+        masks_dir_out: "sun_masks"
+        clean_image_sun: "clean_image_sun"
+        selfcal_subtracted: 'self_sun_subtracted'
+        quality_control: 'quality_control_subt_images'
+        quality_control1: 'quality_control_subt_images1'
+        quality_control2: 'quality_control_subt_images2'
+        quality_control3: 'quality_control_subt_images3'
+        residual_vis_dir: 'residual_vis'
+        concat_image: 'concat_image'
+        qcal_output_dir: 'peeled.qc'
+        band: L
+
+      L2:
+        ms: msdir/1671435077_sdp_l0_1024ch_GRS1747-312.ms 
+        dir_out: obs2
+        perscan_dir_out: "ms_scans"
+        sun_images_dir: "sun_images"
+        regions_dir_out: "region_files"
+        masks_dir_out: "sun_masks"
+        clean_image_sun: "clean_image_sun"
+        selfcal_subtracted: 'self_sun_subtracted'
+        quality_control: 'quality_control_subt_images'
+        quality_control1: 'quality_control_subt_images1'
+        quality_control2: 'quality_control_subt_images2'
+        quality_control3: 'quality_control_subt_images3'
+        residual_vis_dir: 'residual_vis'
+        concat_image: 'concat_image'
+        qcal_output_dir: 'peeled.qc'
+        band: L
+
+      UHF:
+        ms: msdir/1583662427_sdp_l0.1024ch_1024ch_J033230-280757.ms 
+        dir_out: obs3
+        perscan_dir_out: "ms_scans"
+        sun_images_dir: "sun_images"
+        regions_dir_out: "region_files"
+        masks_dir_out: "sun_masks"
+        clean_image_sun: "clean_image_sun"
+        selfcal_subtracted: 'self_sun_subtracted'
+        quality_control: 'quality_control_subt_images'
+        quality_control1: 'quality_control_subt_images1'
+        quality_control2: 'quality_control_subt_images2'
+        quality_control3: 'quality_control_subt_images3'
+        residual_vis_dir: "residual_vis"
+        concat_image: 'concat_image'
+        qcal_output_dir: 'peeled.qc'
+        band: UHF
+    
+
+  inputs:
+    obs:
+      choices: [L1, L2, UHF]
+      info: "Selects observation, see labels above"
+    suffix:
+      dtype: str
+      default: ''
+    dir_out: 
+      dtype: str
+    ms:
+      dtype: MS
+    splitted_ms_suffix:
+      dtype: str
+      default: '_scan_'
+    ms_list:
+      dtype: List[MS]
+    strArray: 
+      dtype: List[str]
+
+
+# size 8000 for obs 1 and 3. Size  [14200, 14200] for obs2
+    
+  steps:
+    image-1:
+      info: "Auto-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params: 
+        column: DATA
+        niter: 50000
+        #padding: 2
+        size: [10000, 10000] 
+        auto-threshold: 3
+        temp_dir: '{root.dir_out}/tmp'
+        save-source-list: false
+        use-wgridder: true
+        multiscale: false
+        wgridder-accuracy: 1e-6 
+        
+
+    mask-1:
+      cab: breizorro 
+      info: 'Creating a fits mask with breizorro'
+      params:
+        restored_image: "{previous.restored-mfs}"
+        mask: '{previous.prefix}-mask.fits'
+        threshold: 15
+
+
+    image-2: 
+      info: "Breizorro-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: DATA
+        niter: 50000
+        padding: 2
+        size: [10000, 10000] 
+        auto-threshold: =UNSET
+        fits-mask: "{previous.mask}"
+        temp_dir: '{root.dir_out}/tmp' 
+        save-source-list: false
+        use-wgridder: true
+        multiscale: false
+        wgridder-accuracy: 1e-6  
+
+
+    save-flags-1: 
+      cab: flagman
+      info: 'Saving the flags after 1GC'
+      params:
+        ms: '{recipe.ms}'
+        name: "after 1GC"
+        mode: save
+    
+
+    restore-flags-1: 
+      cab: flagman
+      info: 'Restoring the flags after 1GC, when needed.'
+      skip: true
+      params:
+        ms: '{recipe.ms}'
+        name: "after 1GC"
+        mode: restore
+ 
+
+    selfcal_1:
+      cab: quartical
+      info: "First round of self-calibration"
+      params:
+        input_ms.path: '{recipe.ms}'
+        solver.terms: [K]
+        K.type: phase
+        K.direction_dependent: false
+        K.freq_interval: '0'
+        K.time_interval: '4' 
+        K.initial_estimate: true
+        input_ms.time_chunk: '128'
+        solver.iter_recipe: [100]
+        input_model.recipe: MODEL_DATA
+        output.overwrite: true
+        output.products: [corrected_data]
+        output.columns: [CORRECTED_DATA]
+
+ 
+    save-flags-2: 
+      cab: flagman
+      info: 'Saving the flags after 2GC'
+      params:
+        ms: '{recipe.ms}'
+        name: "after 2GC"
+        mode: save
+
+
+    image-3: 
+      info: "Breizorro-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: CORRECTED_DATA
+        temp_dir: '{root.dir_out}/tmp'
+        niter: 100000
+        padding: 2
+        size: [10000, 10000] 
+        auto-threshold: =UNSET
+        multiscale: false
+        save-source-list: false
+        fits-mask: "{steps.image-1.prefix}-mask.fits"
+        use-wgridder: true
+        wgridder-accuracy: 1e-6 
+
+ 
+    mask-2: 
+      cab: breizorro
+      info: 'Creating a fits mask with breizorro'
+      params:
+        restored_image: '{previous.restored-mfs}'
+        mask: '{previous.prefix}-mask.fits'
+        threshold: 15
+
+
+    image-4: 
+      info: "Breizorro-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: CORRECTED_DATA
+        temp_dir: '{root.dir_out}/tmp'
+        save-source-list: true
+        fits-mask: "{previous.mask}"
+        auto-threshold: =UNSET
+        niter: 100000
+        padding: 2
+        size: [10000, 10000]  
+        multiscale: false
+        use-wgridder: true
+        wgridder-accuracy: 1e-6 
+
+
+
+    selfcal_2:
+      cab: quartical
+      info: "Second round of Self-calibration"
+      params:
+        input_ms.path: '{recipe.ms}'
+        solver.terms: [K]
+        K.type: phase
+        K.direction_dependent: false
+        K.freq_interval: '0'
+        K.time_interval: '4' 
+        K.initial_estimate: true
+        input_ms.time_chunk: '128'
+        solver.iter_recipe: [100]
+        input_model.recipe: MODEL_DATA
+        output.overwrite: true
+        output.products: [corrected_data]
+        output.columns: [CORRECTED_DATA]
+
+
+
+    image-5: 
+      info: "Breizorro-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        column: CORRECTED_DATA
+        temp_dir: '{root.dir_out}/tmp'
+        save-source-list: true
+        fits-mask: '{recipe.dir_out}/im3/im3-mask.fits' 
+        auto-threshold: =UNSET
+        niter: 100000
+        padding: 2
+        size: [10000, 10000] 
+        multiscale: false
+        use-wgridder: true
+        wgridder-accuracy: 1e-6 
+
+
+
+    backup_model_data-1:
+      cab: rename_model_data
+      info: 'Renaming the MODEL_DATA visibilities to ORIGINAL_MODEL_DATA(saving the MODEL_DATA of the original visibilities)'
+      skip: true
+      params:
+        ms_list: ="{recipe.ms}"
+        oldname: 'MODEL_DATA'
+        newname: 'MODEL_DATA_ORIGINAL'
+
+
+    scan_numbers:
+      info: 'Extract a list of unique scan numbers from an MS file. The scan output parameter is a list of strings representing the unique scan numbers.'
+      cab: scan_numbers
+      params:
+        ms: '{recipe.ms}'
+        outfile: ='{recipe.dir_out}/scan_numbers.txt' 
+
+
+    load_scan_numbers:
+      cab: load_scan_numbers
+      params:
+        scans_file: =steps.scan_numbers.outfile
+
+
+    split_ms_by_scan: 
+      info: ' Split the MS into scans using as input the scan_numbers'
+      params:
+        scan_list: =steps.load_scan_numbers.scan_numbers 
+        ms: '{recipe.ms}'
+      recipe:
+        inputs:
+          scan_list:
+            dtype: List[str]
+          ms:
+            dtype: MS
+        for_loop:
+          var: scan
+          over: scan_list
+        steps:     
+          casa_split_scan:
+            cab: splitms_scan
+            params:
+              vis: '{root.ms}'
+              datacolumn: 'all'
+              scan: '{recipe.scan}'
+              outputvis: ="{root.dir_out}" + "/" + "{root.perscan_dir_out}" + "/" + STRIPEXT(BASENAME(recipe.ms)) + "_scan_{recipe.scan}.ms"
+
+
+    get_perscan_old_coords: 
+      cab: get_old_coords
+      info: 'Get the phase centre coordinates (RA/DEC) of the main field for each scan.'
+      params: 
+        outfile: '{recipe.dir_out}/old_perscans_coods.txt'
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+                
+
+    get_sun_coordinates: 
+      cab: sun_coordinates
+      info: 'Determine the Sun coordinates (RA/DEC) for all scans in the MS and write into a txt file '
+      params:
+        ms: '{recipe.ms}'
+        outfile: '{recipe.dir_out}/sun_coordinates.txt'
+
+
+    shift_to_sun:
+      cab: shift_coords
+      info: 'Change the phase centre of the main field to the Sun.'
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+        coords: '{recipe.steps.get_sun_coordinates.outfile}'
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
+        
+
+    image_sun:
+      info: "Create a dirty image of the Sun for each scan."
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:  
+              niter: 0
+              size: 6000
+              ms: '{recipe.mss}'
+              use-wgridder: false
+              column: CORRECTED_DATA
+              wgridder-accuracy: 1e-6
+              temp_dir: '{root.dir_out}/tmp'
+              no-update-model-required: true
+              prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.sun_images_dir}/" + STRIPEXT(BASENAME(recipe.mss))
+
+
+
+    create_ds9_regions:
+      cab: create_ds9_regions
+      info: 'Create ds9 regions for each scan'
+      params:
+        ms: '{recipe.ms}'
+        input_file: '{recipe.steps.get_sun_coordinates.outfile}'
+        output_dir: '{recipe.dir_out}/{recipe.regions_dir_out}' 
+
+
+    make_mask:      
+      info: 'Creating fits masks with breizorro for each scan'
+      recipe:
+        inputs:
+          scan_list:
+            dtype: List[str]
+        steps:
+          load_scan_numbers:
+            cab: load_scan_numbers
+            params:
+              scans_file: =root.steps.scan_numbers.outfile  
+          making_masks:
+            params:
+              region_dir:  "{root.dir_out}/{root.regions_dir_out}"  
+              scan_list: =steps.load_scan_numbers.scan_numbers   
+            recipe:
+              inputs:
+                scan_list:
+                  dtype: List[str]
+                region_dir:
+                  dtype: Directory 
+              for_loop:
+                var: scan
+                over: scan_list
+              steps:
+                make_mask:
+                  cab: breizorro
+                  params:
+                    restored_image: ="{root.dir_out}/{root.perscan_dir_out}/{root.sun_images_dir}/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}-MFS-image.fits"
+                    threshold: 9999999999999999999999999999999
+                    merge: ="{root.dir_out}" + "/" + "{root.regions_dir_out}" + "/" + "sun_region_{recipe.scan}.reg"
+                    mask: ="{root.dir_out}" + "/" + "{root.masks_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}-mask.fits"
+
+
+
+    deconvolve_sun:
+      info: " clean imaging of the Sun for a better model, using the masks created from the make_mask step."
+      params:
+        mask_list: =GLOB('{recipe.dir_out}/{recipe.masks_dir_out}/*.fits*') 
+        ms_list:  =GLOB('{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms') # insert folder path then glob#         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+          mask_list:
+            dtype: List[File]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}' 
+              size: 6000
+              niter: 100000
+              multiscale: true
+              threshold: 3.55e-4 #9.26e-5 #obs1 4.38e-5
+              join_channels: true
+              fit_spectral_pol: 4
+              auto-threshold: =UNSET  
+              save-source-list: true 
+              column: CORRECTED_DATA 
+              temp_dir: '{root.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.mss))
+              fits-mask: ="{root.dir_out}" + "/" + "{root.masks_dir_out}" + "/" + STRIPEXT(BASENAME(recipe.mss)) + "-mask.fits"
+
+
+
+    predict_sun_model:
+      info: " Predict Sun Model to the MODEL_DATA column." 
+      skip: true     
+      params: 
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")
+        #ms_list: =SORT('scans')
+      recipe:
+        inputs:
+          scans:
+            dtype: List[MS]
+          ms_list:
+            dtype: List[MS]
+          mask_list:
+            dtype: List[File]
+        for_loop:
+          var: ms 
+          over: ms_list
+        steps:
+          predict:
+            _use: lib.steps.wsclean.predict           
+            params:
+              size:  6000
+              predict: true
+              padding: 2
+              ms: '{recipe.ms}'
+              temp_dir: '{root.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.ms)) #+ "-MFS"
+
+
+
+    quality_control_imaging1:
+      info: "Image Sun field after subtraction. This step serves to inspect the subtraction process."
+      params:
+        ms_list:  =GLOB('{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms')         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}' 
+              niter: 0
+              padding: =UNSET
+              size:   [10000, 10000]  
+              column: MODEL_DATA
+              auto-threshold: =UNSET
+              no-update-model-required: true
+              temp_dir: '{root.dir_out}/tmp'
+              prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control}/" + STRIPEXT(BASENAME(recipe.mss))   
+
+
+    rephase: 
+      cab: shift_coords
+      info: "Restore the main field"
+      params:
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+        coords: '{recipe.steps.get_perscan_old_coords.outfile}' 
+        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
+
+
+    quality_control_imaging2:
+      info: "Image CORECTED_DATA fro inspection."
+      params:
+        ms_list:  =GLOB('{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms')         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}' 
+              niter: 0
+              padding: 2
+              size:  [10000, 10000]  
+              column: CORRECTED_DATA
+              auto-threshold: =UNSET
+              temp_dir: '{root.dir_out}/tmp'
+              no-update-model-required: true
+              prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control2}/" + STRIPEXT(BASENAME(recipe.mss))   
+
+
+
+    quality_control_imaging3:
+      info: "Image MODEL_DATA for inspection"
+      params:
+        ms_list:  =GLOB('{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms')         
+      recipe:
+        inputs:
+          ms_list:
+            dtype: List[MS]
+        for_loop:
+          var: mss
+          over: ms_list
+        steps:
+          image:
+            _use: lib.steps.wsclean.image
+            params:
+              ms: '{recipe.mss}' 
+              niter: 0
+              padding: 2
+              size:  [10000, 10000]  
+              column: MODEL_DATA
+              auto-threshold: =UNSET
+              temp_dir: '{root.dir_out}/tmp'
+              no-update-model-required: true
+              prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control3}/" + STRIPEXT(BASENAME(recipe.mss))   
+
+
+
+    add_model_data_columnn:
+      cab: add_model_data_column
+      info: "Add new columns to the original MS in this case the MODEL_DATA_SUN and CORRECTED_DATA_SUN columns"
+      params: 
+        ms:  '{recipe.ms}'
+        col_names: ['MODEL_DATA_SUN', 'CORRECTED_DATA_SUN']
+        like_col: 'MODEL_DATA_ORIGINAL'
+
+
+
+    data_storage:
+      info: 'Copying data from MODEL_DATA to MODEL_DATA_SUN, from each scan in the MS to the single MS'
+      cab:  copy_model_data_to_model_data_sun
+      params:
+        ms: '{recipe.ms}'
+        copycol: 'MODEL_DATA'
+        tocol: 'MODEL_DATA_SUN'
+        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+
+
+    subtract_sun:
+      info: 'Subtracting the SOLAR_MODEL from the visibilities (CORRECTED_DATA) in the original MS'
+      cab: taql_update
+      params:
+        ms: '{recipe.ms}'
+        commands: =LIST("set", "CORRECTED_DATA_SUN=CORRECTED_DATA-MODEL_DATA_SUN")
+
+
+    image-6:
+      info: "Refine main field model after subtraction."
+      _use: lib.steps.wsclean.image
+      params:
+        ms: '{recipe.ms}'
+        padding: 2                      
+        niter: 100000
+        size: [10000, 10000]  #[16300, 16300] #[10240, 10240] 
+        auto-threshold: 3
+        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
+        use-wgridder: true
+        column: CORRECTED_DATA_SUN
+        wgridder-accuracy: 1e-6
+        temp_dir: '{root.dir_out}/tmp'
+
+
+    image-6a:
+      info: "Quality_control: Image the improved model"
+      _use: lib.steps.wsclean.image
+      params:
+        ms: '{recipe.ms}'
+        padding: 2                      
+        niter: 0
+        size:  [10000, 10000]    #[16300, 16300] #[10240, 10240] 
+        auto-threshold: 3
+        use-wgridder: true
+        column: MODEL_DATA
+        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
+        wgridder-accuracy: 1e-6
+        temp_dir: '{root.dir_out}/tmp'
+        no-update-model-required: true
+        #From here we have the improved MODEL_DATA of, without the Sun (which will be used in the peeling step with the MODEL_DATA_SUN column) 
+
+
+    image-6b:
+      info: "Quality_control: Image the model of the Sun"
+      _use: lib.steps.wsclean.image
+      params:
+        ms: '{recipe.ms}'
+        padding: 2                      
+        niter: 0
+        size: [10000, 10000]   #[16300, 16300] #[10240, 10240] 
+        auto-threshold: 3
+        use-wgridder: true
+        column: MODEL_DATA_SUN
+        wgridder-accuracy: 1e-6
+        temp_dir: '{root.dir_out}/tmp'
+        no-update-model-required: true
+
+
+    save-flags-3: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "Before 3GC"
+        mode: restore
+   
+
+    
+    cal_and_peel_sol:
+      cab: quartical
+      info: 'Selfcal + peel sun'
+      params:
+        input_ms.path: '{recipe.ms}'
+        input_ms.weight_column: WEIGHT_SPECTRUM
+        input_ms.time_chunk: '14'
+        input_ms.freq_chunk: '0'
+        input_ms.select_uv_range: [0,0]
+        input_ms.group_by: [FIELD_ID,DATA_DESC_ID,SCAN_NUMBER]
+        input_model.recipe: MODEL_DATA:MODEL_DATA_SUN 
+        input_model.apply_p_jones: false
+        input_ms.is_bda: False
+        solver.terms: [K,dE]
+        solver.iter_recipe: [100,50]
+        solver.propagate_flags: false
+        solver.robust: false 
+        solver.threads: 4
+        dask.threads: 8
+        output.gain_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/peeled.qc'
+        output.log_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/'
+        output.overwrite: true
+        output.products: [corrected_residual]
+        output.columns: [CORRECTED_RESIDUAL]
+        output.subtract_directions: [1]
+        output.flags: true 
+        output.apply_p_jones_inv: false
+        mad_flags.enable: false
+        dask.scheduler: threads
+        K.type: phase  
+        K.direction_dependent: false
+        K.time_interval: 4
+        K.freq_interval: 0
+        K.initial_estimate: true
+        dE.type: complex
+        dE.time_interval: 14
+        dE.freq_interval: 64 
+        dE.initial_estimate: False
+        dE.direction_dependent: true
+        dE.pinned_directions: [0]   
+
+
+    save-flags-4: 
+      cab: flagman
+      params:
+        ms: '{recipe.ms}'
+        name: "After 3GC"
+        mode: save
+
+
+    image-7: 
+      info: "Deconvolve the improved image after peeling"
+      _use: lib.steps.wsclean.image
+      params:
+        column: CORRECTED_RESIDUAL
+        temp_dir: '{root.dir_out}/tmp'
+        save-source-list: true
+        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
+        niter: 100000
+        auto-threshold: 3
+        size: [10000, 10000] 
+        padding: 2
+        multiscale: false
+        use-wgridder: true
+        #no-update-model-required: true
+        wgridder-accuracy: 1e-6 
+
+
+
+    mask-4: 
+      cab: breizorro
+      info: 'Creating a fits mask with breizorro'
+      params:
+        restored_image: "{previous.restored-mfs}"
+        mask: '{previous.prefix}-mask.fits'
+        threshold: 30
+
+
+    image-8: 
+      info: "Run second round of deconvolution of the improved image"
+      _use: lib.steps.wsclean.image
+      params:
+        column: CORRECTED_RESIDUAL
+        temp_dir: '{root.dir_out}/tmp'
+        save-source-list: true
+        fits-mask:  '{previous.mask}'
+        niter: 100000
+        auto-threshold: 3
+        size:  [10000, 10000] 
+        padding: 2
+        multiscale: false
+        use-wgridder: true
+        wgridder-accuracy: 1e-6 
+
