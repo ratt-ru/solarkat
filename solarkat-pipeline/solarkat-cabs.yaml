@@ -1,0 +1,594 @@
+_include:
+   - (quartical)stimela_cabs.yaml
+
+## This augments the standard 'cabs' config section
+cabs:
+  wsclean:
+    image: ''
+    command: wsclean
+
+  mkdir:
+    command: mkdir
+    inputs:
+        dtype: str
+        policies:
+          positional: true
+
+
+  mv:
+    command: mv
+    policies:
+      positional: true
+    inputs:
+      src:
+        dtype: File
+        required: true
+    outputs:  
+      dest:
+          dtype: Union[File, Directory]
+          required: true
+
+
+  cp:
+    command: cp -a
+    policies:
+      positional: true
+    inputs:
+      src:
+        dtype: File
+        required: true
+    outputs:
+      dest:
+        dtype: Union[File, Directory]
+        required: true
+
+
+  flagman:
+    command: casa --nogui --log2term -c 'flagmanager(vis="{current.ms}", mode="{current.mode}", versionname="{current.name}")'
+    policies:
+      skip: true
+    inputs:
+      ms: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      name:
+        info: "flag version name"
+        required: true
+      mode: 
+        choices: [save, restore]
+        default: restore
+
+
+  # scan_numbers:
+  #   command: find_sun_stimela.scan_numbers
+  #   flavour: python
+  #   inputs:
+  #     ms: 
+  #       dtype: MS
+  #       required: true 
+  #       default: '{recipe.ms}'
+  #   outputs:
+  #     scans:
+  #       dtype: List[str]
+
+
+# Definition of scan_numbers1 step
+  scan_numbers: 
+    info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'      
+    command: find_sun_stimela.scan_numbers
+    flavour: python
+    inputs:
+      ms:
+        dtype: MS
+    outputs:
+      outfile:
+        dtype: File
+
+
+  load_scan_numbers:
+    command: |
+      #scans_file = 'scan_numbers.txt' 
+      with open(scans_file, 'r') as f:
+        scan_numbers = [line.strip() for line in f]
+      print('Loaded scan numbers:', scan_numbers)
+    flavour: python-code
+    inputs:
+      scans_file:
+        dtype: File
+    outputs:
+      scan_numbers:
+        dtype: List[str]
+
+
+
+  splitms_scan:
+    command: split
+    flavour: casa-task
+    inputs:
+      vis: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      scan:
+        dtype: str
+        info: "scan number range"
+        default: 'all'
+      datacolumn:
+        dtype: str 
+        default: 'all' 
+      outputvis:
+        dtype: str
+        default: '{recipe.ms}-output'
+        required: true
+
+
+  perscan_timerange_intervals:
+    command: find_sun_stimela.perscan_timerange_intervals
+    inputs:
+      scan_list:
+        dtype: MS
+      interval:
+        dtype: int
+    outputs:  
+      timeranges:
+        dtype: List[str] 
+    flavour:
+      kind: python
+      output: timeranges
+          
+
+  splitms_time:
+    command: split
+    flavour: casa-task
+    inputs:
+      vis: 
+        dtype: MS
+        required: true
+        default: '{recipe.ms}'
+      timerange:
+        dtype: str
+        info: "scan number range"
+        default: 'all'
+      datacolumn:
+        dtype: str 
+        default: 'all'  
+      outputvis:
+        dtype: str
+        default: '{recipe.ms}-output'
+        required: true 
+
+
+  get_old_coords:
+    command: find_sun_stimela.get_old_coords
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+        required: true
+    outputs:
+      outfile:
+        dtype: File
+
+
+  sun_coordinates:
+    command: find_sun_stimela.get_sun_coordinates
+    flavour: python
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+    outputs:
+      outfile:
+        dtype: File
+
+
+  pertime_sun_coordinates:
+    command: find_sun_stimela.get_pertime_sun_coordinates
+    inputs:
+      ms_list:
+        dtype: List[MS]
+        required: true
+    outputs:
+      outfile:
+        dtype: File
+    flavour:
+      kind: python
+
+
+  rename_model_data:
+    command: find_sun_stimela.rename_model_data_column
+    flavour: python
+    inputs: 
+      ms_list:
+        dtype: List[MS]
+        required: true
+      oldname:
+        dtype: str
+      newname: 
+        dtype: str
+        
+
+  shift_coords:
+    command: find_sun_stimela.shift_coordinates
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+      coords:
+        dtype: File
+        required: true
+      splitted_ms_dir:
+        dtype: Directory
+        #mkdir: true
+      # datacolumn:
+      #   dtype: str  
+      #   required: true
+
+
+
+  shift_coords2:
+    command: find_sun_stimela.shift_to_sun
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+      coords:
+        dtype: File
+        required: true
+      splitted_ms_dir:
+        dtype: Directory
+        mkdir: true
+      datacolumns:
+        dtype: List[str]  
+        required: true
+
+
+  shift_ms:
+    command: find_sun_stimela.shift_to_sun
+    flavour: python
+    inputs: 
+      ms:
+        dtype: MS
+      coords:
+        dtype: File
+      datacolumns:
+        dtype: List[str]
+      splitted_ms_dir:
+        dtype: Directory
+        mkdir: true
+    
+
+  add_model_data_column:
+    command: find_sun_stimela.add_column_to_ms
+    flavour: python
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      col_names:
+        dtype: List[str]
+        required: true
+      like_col:
+        dtype: str
+        required: true
+
+
+  add_model_data_columns:
+    command: find_sun_stimela.add_columns_to_ms
+    flavour: python
+    inputs:
+      ms:
+        dtype: MS
+      col_names:
+        dtype: List[str]
+      like_col:
+        dtype: str
+
+
+  add_column:
+    command: find_sun_stimela.add_columns_to_ms_list
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+      col_names:
+        dtype: List[str]
+      like_col:
+        dtype: str
+
+
+  add_column_casa:
+    command: find_sun_stimela.copy_model_data_to_model_data_sun
+    flavour: python
+    inputs:
+      single_ms:
+        dtype: MS
+      ms_list:
+        dtype: List[MS]
+
+
+
+  rename_columns:
+    command: find_sun_stimela.rename_columns
+    flavour: python
+    inputs: 
+      ms_list:
+        dtype: List[MS]
+        required: true
+
+
+  create_ds9_regions1:
+    command: find_sun_stimela.create_ds9_region_from_file
+    flavour: python
+    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
+    inputs:
+      input_file:
+        dtype: File
+        required: true
+      output_dir:
+        dtype: Directory
+      output_filename:
+        dtype: str
+      outputs:
+        output_filename:
+          dtype: str
+
+
+
+  create_ds9_regions:
+    command: find_sun_stimela.create_ds9_region_from_file
+    flavour: python
+    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
+    inputs:
+      input_file:
+        dtype: File
+        required: true
+      output_dir:
+        dtype: Directory
+      ms:
+        dtype: MS
+        required: true
+      # scan_number_file:
+      #   dtype: File
+
+
+  subtract:
+    command: find_sun_stimela.subtrac_sun
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+
+  taql_update:
+    command: "taql update"
+    policies:
+      positional: true
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      commands:
+        dtype: List[str]
+        policies:
+          repeat: list
+
+
+  taql_subtract_model:
+    command: find_sun_stimela.subtract_model_data
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+        required: true
+
+
+  taql_add_column:
+    command: "taql create table"
+    policies:
+      positional: true
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      commands:
+        dtype: List[str]
+        policies:
+          repeat: list
+
+
+
+  copy_columns:
+    command: find_sun_stimela.copy_columns_to_target
+    info: 'copying multiple columns from a list of MS to a single ms'
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+      ms:
+        dtype: MS
+      copycols:
+        dtype: List[str]
+      tocols:
+        dtype: List[str]
+
+
+
+  copy_model_data_to_model_data_sun:
+    command: find_sun_stimela.copy_model_data_to_model_data_sun #opy_model_data #copy_column_to_target
+    info: 'copying a column from a list of MS to a single ms'
+    flavour: python
+    inputs:
+      ms_list:
+        dtype: List[MS]
+      ms:
+        dtype: MS
+      copycol:
+        dtype: str
+      tocol:
+        dtype: str
+
+
+  breizorro:
+    command: breizorro
+    policies:
+      replace: {'_': '-'}
+    inputs:
+      restored_image:
+        dtype: File
+      mask_image:
+        dtype: File
+      merge:
+        dtype: Union[str, List[str]]
+      subtract:
+        dtype: Union[str, List[str]]
+      threshold:
+        dtype: float
+        default: 6.5
+      dilate:
+        dtype: int
+      number_islands:
+        dtype: bool
+      extract_islands:
+        dtype: List[str]
+        policies:
+          repeat: list
+      remove_islands:
+        dtype: List[str]
+        policies:
+          repeat: list
+      invert:
+        dtype: bool
+      make_binary:
+        dtype: bool
+    outputs:
+      mask:
+        dtype: File
+        nom_de_guerre: outfile
+        required: true 
+
+
+lib:
+  steps:
+    wsclean:
+      base:
+        info: "base wsclean settings"
+        cab: wsclean
+        params:
+          scale: 1.5asec
+          size: [16000, 32000]
+          padding: 1.5
+          nwlayers_factor: 3
+          nchan: 8
+          temp_dir: /home/samboco/solarkat/SUN_IMAGING_STEPS/temp_dir
+          use-wgridder: true
+          log-time: true
+          ms: '{recipe.ms}'
+          auto-threshold: 3
+          prefix: '{recipe.image-prefix}'  
+        
+
+      dirty:
+        _use: lib.steps.wsclean.base
+        info: "wsclean step for dirty-only image"
+        params:
+          column: CORRECTED_DATA
+          weight: 'briggs 0'
+          niter: 0
+          # parallel_gridding: 64
+
+
+      dirty_pol:
+        _use: lib.steps.wsclean.dirty
+        info: "wsclean step for dirty-only IQUV image"
+        cab: wsclean_pol
+        params:
+          pol: IQUV
+
+
+      image:
+        _use: lib.steps.wsclean.dirty
+        info: "wsclean step for imaging"
+        params:
+          column: CORRECTED_DATA
+          mgain: 0.8 #0.9
+          weight: 'briggs 0'
+          #fit_beam: true
+          # elliptical_beam: true
+          niter: 100000
+          join_channels: true
+          fit_spectral_pol: 4
+          
+
+      image_pol:
+        _use: lib.steps.wsclean.image
+        info: "wsclean step for IQUV imaging"
+        cab: wsclean_pol
+        params:
+          join-polarizations: true
+          #fit-spectral-pol: 
+          pol: IQUV
+
+      changecentre: 
+        _use: lib.steps.wsclean.base
+        params:
+          chgcentre: true
+
+
+      image_pol2:
+        _use: lib.steps.wsclean.image_pol
+        info: "wsclean step for IQ imaging"
+        params:
+          pol: IQ
+
+
+      predict:
+        _use: lib.steps.wsclean.base
+        info: "wsclean step for predicting a model"
+        params:
+          predict: true
+
+
+      predict_pol:
+        _use: lib.steps.wsclean.predict
+        info: "wsclean step for predicting an IQUV model"
+        cab: wsclean_pol
+        params:
+          predict: true
+          pol: IQUV
+
+
+      predict_pol2:
+        _use: lib.steps.wsclean.predict_pol
+        info: "wsclean step for predicting an IQ model"
+        params:
+          pol: IQUV
+
+
+    quartical:
+      base:
+        cab: quartical
+        params:
+          input_ms.time_chunk: '16'
+          input_ms.freq_chunk: '0'
+          input_ms.group_by: [SCAN_NUMBER,FIELD_ID,DATA_DESC_ID]
+          input_ms.select_uv_range: [0, 0]
+          input_ms.select_corr: [0, 3]
+          input_model.apply_p_jones: false
+          solver.terms: [K]
+          solver.iter_recipe: [25]
+          solver.propagate_flags: true
+          solver.robust: false
+          output.overwrite: true
+          output.products: [corrected_data]
+          output.columns: [CORRECTED_DATA]
+          output.flags: true
+          output.apply_p_jones_inv: false
+          output.net_gain: false
+          mad_flags.enable: true
+          mad_flags.threshold_bl: 5
+          mad_flags.threshold_global: 5
+          mad_flags.max_deviation: 5
+          K.time_interval: 1
+          K.freq_interval: 0
+          K.type: delay
