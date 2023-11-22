@@ -40,7 +40,6 @@ lib:
           scale: 1.5asec
 
 
-
 ## this augments the standard 'opts' config section to tweak logging settings
 opts:
   log:
