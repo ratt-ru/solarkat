@@ -58,8 +58,20 @@ cabs:
       mode: 
         choices: [save, restore]
         default: restore
+        
 
-
+ rename_model_data:
+    command: find_sun_stimela.rename_model_data_column
+    flavour: python
+    inputs: 
+      ms_list:
+        dtype: List[MS]
+        required: true
+      oldname:
+        dtype: str
+      newname: 
+        dtype: str
+        
 # Definition of scan_numbers1 step
   scan_numbers: 
     info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'      
@@ -86,7 +98,6 @@ cabs:
     outputs:
       scan_numbers:
         dtype: List[str]
-
 
 
   splitms_scan:
@@ -134,19 +145,6 @@ cabs:
         dtype: File
         
 
-  rename_model_data:
-    command: find_sun_stimela.rename_model_data_column
-    flavour: python
-    inputs: 
-      ms_list:
-        dtype: List[MS]
-        required: true
-      oldname:
-        dtype: str
-      newname: 
-        dtype: str
-        
-
   shift_coords:
     command: find_sun_stimela.shift_coordinates
     flavour: python
@@ -162,116 +160,6 @@ cabs:
       # datacolumn:
       #   dtype: str  
       #   required: true
-
-
-
-  shift_coords2:
-    command: find_sun_stimela.shift_to_sun
-    flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
-      coords:
-        dtype: File
-        required: true
-      splitted_ms_dir:
-        dtype: Directory
-        mkdir: true
-      datacolumns:
-        dtype: List[str]  
-        required: true
-
-
-  shift_ms:
-    command: find_sun_stimela.shift_to_sun
-    flavour: python
-    inputs: 
-      ms:
-        dtype: MS
-      coords:
-        dtype: File
-      datacolumns:
-        dtype: List[str]
-      splitted_ms_dir:
-        dtype: Directory
-        mkdir: true
-    
-
-  add_model_data_column:
-    command: find_sun_stimela.add_column_to_ms
-    flavour: python
-    inputs:
-      ms:
-        dtype: MS
-        required: true
-      col_names:
-        dtype: List[str]
-        required: true
-      like_col:
-        dtype: str
-        required: true
-
-
-  add_model_data_columns:
-    command: find_sun_stimela.add_columns_to_ms
-    flavour: python
-    inputs:
-      ms:
-        dtype: MS
-      col_names:
-        dtype: List[str]
-      like_col:
-        dtype: str
-
-
-  add_column:
-    command: find_sun_stimela.add_columns_to_ms_list
-    flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
-      col_names:
-        dtype: List[str]
-      like_col:
-        dtype: str
-
-
-  add_column_casa:
-    command: find_sun_stimela.copy_model_data_to_model_data_sun
-    flavour: python
-    inputs:
-      single_ms:
-        dtype: MS
-      ms_list:
-        dtype: List[MS]
-
-
-
-  rename_columns:
-    command: find_sun_stimela.rename_columns
-    flavour: python
-    inputs: 
-      ms_list:
-        dtype: List[MS]
-        required: true
-
-
-  create_ds9_regions1:
-    command: find_sun_stimela.create_ds9_region_from_file
-    flavour: python
-    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
-    inputs:
-      input_file:
-        dtype: File
-        required: true
-      output_dir:
-        dtype: Directory
-      output_filename:
-        dtype: str
-      outputs:
-        output_filename:
-          dtype: str
-
 
 
   create_ds9_regions:
@@ -290,69 +178,23 @@ cabs:
       # scan_number_file:
       #   dtype: File
 
-
-  subtract:
-    command: find_sun_stimela.subtrac_sun
+   
+  add_model_data_column:
+    command: find_sun_stimela.add_column_to_ms
     flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
-
-  taql_update:
-    command: "taql update"
-    policies:
-      positional: true
     inputs:
       ms:
         dtype: MS
         required: true
-      commands:
+      col_names:
         dtype: List[str]
-        policies:
-          repeat: list
-
-
-  taql_subtract_model:
-    command: find_sun_stimela.subtract_model_data
-    flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
+        required: true
+      like_col:
+        dtype: str
         required: true
 
 
-  taql_add_column:
-    command: "taql create table"
-    policies:
-      positional: true
-    inputs:
-      ms:
-        dtype: MS
-        required: true
-      commands:
-        dtype: List[str]
-        policies:
-          repeat: list
-
-
-
-  copy_columns:
-    command: find_sun_stimela.copy_columns_to_target
-    info: 'copying multiple columns from a list of MS to a single ms'
-    flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
-      ms:
-        dtype: MS
-      copycols:
-        dtype: List[str]
-      tocols:
-        dtype: List[str]
-
-
-
-  copy_model_data_to_model_data_sun:
+copy_model_data_to_model_data_sun:
     command: find_sun_stimela.copy_model_data_to_model_data_sun #opy_model_data #copy_column_to_target
     info: 'copying a column from a list of MS to a single ms'
     flavour: python
@@ -367,6 +209,20 @@ cabs:
         dtype: str
 
 
+  taql_update:
+    command: "taql update"
+    policies:
+      positional: true
+    inputs:
+      ms:
+        dtype: MS
+        required: true
+      commands:
+        dtype: List[str]
+        policies:
+          repeat: list
+
+  
   breizorro:
     command: breizorro
     policies:
