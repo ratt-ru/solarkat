@@ -60,19 +60,6 @@ cabs:
         default: restore
 
 
-  # scan_numbers:
-  #   command: find_sun_stimela.scan_numbers
-  #   flavour: python
-  #   inputs:
-  #     ms: 
-  #       dtype: MS
-  #       required: true 
-  #       default: '{recipe.ms}'
-  #   outputs:
-  #     scans:
-  #       dtype: List[str]
-
-
 # Definition of scan_numbers1 step
   scan_numbers: 
     info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'      
@@ -123,42 +110,6 @@ cabs:
         required: true
 
 
-  perscan_timerange_intervals:
-    command: find_sun_stimela.perscan_timerange_intervals
-    inputs:
-      scan_list:
-        dtype: MS
-      interval:
-        dtype: int
-    outputs:  
-      timeranges:
-        dtype: List[str] 
-    flavour:
-      kind: python
-      output: timeranges
-          
-
-  splitms_time:
-    command: split
-    flavour: casa-task
-    inputs:
-      vis: 
-        dtype: MS
-        required: true
-        default: '{recipe.ms}'
-      timerange:
-        dtype: str
-        info: "scan number range"
-        default: 'all'
-      datacolumn:
-        dtype: str 
-        default: 'all'  
-      outputvis:
-        dtype: str
-        default: '{recipe.ms}-output'
-        required: true 
-
-
   get_old_coords:
     command: find_sun_stimela.get_old_coords
     flavour: python
@@ -181,20 +132,7 @@ cabs:
     outputs:
       outfile:
         dtype: File
-
-
-  pertime_sun_coordinates:
-    command: find_sun_stimela.get_pertime_sun_coordinates
-    inputs:
-      ms_list:
-        dtype: List[MS]
-        required: true
-    outputs:
-      outfile:
-        dtype: File
-    flavour:
-      kind: python
-
+        
 
   rename_model_data:
     command: find_sun_stimela.rename_model_data_column
