@@ -19,6 +19,8 @@ from astropy.coordinates import get_body_barycentric, get_body, get_moon
 
 #________________________________________________________________________________________________________________________________________________________
 
+#Auxiliar functions
+
 def hms2deg(hms):
     '''
     Function to convert hms to degrees
@@ -33,6 +35,12 @@ def dms2deg(dms):
     '''
     dms_angle = Angle(dms, unit='degree')
     return dms_angle.degree
+
+
+def extract_scan_number(ms_scan):
+    # Extract the scan number from the scan file name using regex
+    scan_number = re.search(r"scan_(\d+)\.ms", ms_scan).group(1)
+    return int(scan_number)
 
 #________________________________________________________________________________________________________________________________________________________
 
@@ -58,10 +66,7 @@ def scan_numbers(ms, outfile):
     return scans
 
 
-def extract_scan_number(ms_scan):
-    # Extract the scan number from the scan file name using regex
-    scan_number = re.search(r"scan_(\d+)\.ms", ms_scan).group(1)
-    return int(scan_number)
+
 #________________________________________________________________________________________________________________________________________________________
 
 def rename_model_data_column(ms_list, oldname, newname):
@@ -79,7 +84,6 @@ def rename_model_data_column(ms_list, oldname, newname):
         ms.close()
 
 #________________________________________________________________________________________________________________________________________________________
-
 
 def get_old_coords(ms_list, outfile):
     '''
@@ -169,6 +173,7 @@ def get_sun_coordinates(ms, outfile):
     with open(outfile, 'wt') as f:
         for line in lines:
             f.write(line + '\n')
+
 #________________________________________________________________________________________________________________________________________________________
 
 
@@ -234,7 +239,7 @@ circle({ra}, {dec}, 1188.0000") # color=green
     with open(f'{output_dir}/sun_region_{scan_number}.reg', 'w') as f:
         f.write(sun_region)
 
-#_____________________________________________________________________
+#_____________________________________________________________________________________________________________________________________________________
 
 
 def add_column_to_ms(ms, col_names, like_col):
@@ -262,9 +267,13 @@ def add_column_to_ms(ms, col_names, like_col):
     
     tb.close()
     return success
+
+
 #________________________________________________________________________________________________________________________________________________________
 
+
 #Copying Model data into the model-data-sun in the  ooriginal MS
+
 def copy_model_data_to_model_data_sun(ms, ms_list, copycol, tocol):
     # Open the main MS table as maintab
     maintab = table(ms, readonly=False)
@@ -314,6 +323,4 @@ def copy_model_data_to_model_data_sun(ms, ms_list, copycol, tocol):
     # Close the maintab
     maintab.close()
 
-#_________________________________________________________________________________________________________________________________________________________
-
-
+#________________________________________________________________________________________________________________________________________________________
