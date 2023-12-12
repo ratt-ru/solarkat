@@ -1,7 +1,7 @@
 _include:
    - (quartical)stimela_cabs.yaml
 
-## This augments the standard 'cabs' config section
+## this augments the standard 'cabs' config section
 cabs:
   wsclean:
     image: ''
@@ -58,10 +58,11 @@ cabs:
       mode: 
         choices: [save, restore]
         default: restore
-        
 
- rename_model_data:
-    command: find_sun_stimela.rename_model_data_column
+
+
+  rename_model_data:
+    command: solarkat.rename_model_data_column
     flavour: python
     inputs: 
       ms_list:
@@ -71,11 +72,12 @@ cabs:
         dtype: str
       newname: 
         dtype: str
-        
+
+
 # Definition of scan_numbers1 step
   scan_numbers: 
     info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'      
-    command: find_sun_stimela.scan_numbers
+    command: solarkat.scan_numbers
     flavour: python
     inputs:
       ms:
@@ -100,6 +102,7 @@ cabs:
         dtype: List[str]
 
 
+
   splitms_scan:
     command: split
     flavour: casa-task
@@ -121,8 +124,9 @@ cabs:
         required: true
 
 
+
   get_old_coords:
-    command: find_sun_stimela.get_old_coords
+    command: solarkat.get_old_coords
     flavour: python
     inputs:
       ms_list:
@@ -133,8 +137,9 @@ cabs:
         dtype: File
 
 
+
   sun_coordinates:
-    command: find_sun_stimela.get_sun_coordinates
+    command: solarkat.get_sun_coordinates
     flavour: python
     inputs:
       ms:
@@ -143,10 +148,10 @@ cabs:
     outputs:
       outfile:
         dtype: File
-        
+
 
   shift_coords:
-    command: find_sun_stimela.shift_coordinates
+    command: solarkat.shift_coordinates
     flavour: python
     inputs:
       ms_list:
@@ -156,14 +161,12 @@ cabs:
         required: true
       splitted_ms_dir:
         dtype: Directory
-        #mkdir: true
-      # datacolumn:
-      #   dtype: str  
-      #   required: true
+
+
 
 
   create_ds9_regions:
-    command: find_sun_stimela.create_ds9_region_from_file
+    command: solarkat.create_ds9_region_from_file
     flavour: python
     info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
     inputs:
@@ -175,12 +178,11 @@ cabs:
       ms:
         dtype: MS
         required: true
-      # scan_number_file:
-      #   dtype: File
+    
 
-   
+
   add_model_data_column:
-    command: find_sun_stimela.add_column_to_ms
+    command: solarkat.add_column_to_ms
     flavour: python
     inputs:
       ms:
@@ -194,8 +196,9 @@ cabs:
         required: true
 
 
-copy_model_data_to_model_data_sun:
-    command: find_sun_stimela.copy_model_data_to_model_data_sun #opy_model_data #copy_column_to_target
+
+  copy_model_data_to_model_data_sun:
+    command: solarkat.copy_model_data_to_model_data_sun #opy_model_data #copy_column_to_target
     info: 'copying a column from a list of MS to a single ms'
     flavour: python
     inputs:
@@ -207,6 +210,7 @@ copy_model_data_to_model_data_sun:
         dtype: str
       tocol:
         dtype: str
+
 
 
   taql_update:
@@ -222,7 +226,8 @@ copy_model_data_to_model_data_sun:
         policies:
           repeat: list
 
-  
+
+
   breizorro:
     command: breizorro
     policies:
