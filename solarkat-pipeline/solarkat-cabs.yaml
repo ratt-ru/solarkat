@@ -65,8 +65,8 @@ cabs:
     command: solarkat.rename_model_data_column
     flavour: python
     inputs: 
-      ms_list:
-        dtype: List[MS]
+      ms:
+        dtype: MS
         required: true
       oldname:
         dtype: str
