@@ -69,19 +69,18 @@ def scan_numbers(ms, outfile):
 
 #________________________________________________________________________________________________________________________________________________________
 
-def rename_model_data_column(ms_list, oldname, newname):
+def rename_model_data_column(ms, oldname, newname):
     '''
     Rename the 'MODEL_DATA' column to 'MODEL_DATA_ORIGINAL' in a list of MS tables.
     Parameters:
     ms_list (str): Path to the measurement sets files.
     '''
-    for ms_name in ms_list:
         # open the MS table in read-write mode
-        ms = table(ms_name, readonly=False)
+    ms = table(ms, readonly=False)
         # rename the 'MODEL_DATA' column to 'MODEL_DATA_ORIGINAL'
-        ms.renamecol(oldname, newname)
+    ms.renamecol(oldname, newname)
         # close the MS table
-        ms.close()
+    ms.close()
 
 #________________________________________________________________________________________________________________________________________________________
 
