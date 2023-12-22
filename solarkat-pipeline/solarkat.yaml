@@ -334,7 +334,7 @@ solarkat:
       info: 'Renaming the MODEL_DATA visibilities to ORIGINAL_MODEL_DATA(saving the MODEL_DATA of the original visibilities)'
       skip: false
       params:
-        ms_list: ="{recipe.ms}"
+        ms: ="{recipe.ms}"
         oldname: 'MODEL_DATA'
         newname: 'MODEL_DATA_ORIGINAL'
 
@@ -350,7 +350,7 @@ solarkat:
     load_scan_numbers:
       cab: load_scan_numbers
       params:
-        scans_file: =steps.scan_numbers.outfile
+        scans_file: =steps.scan_numbers_extraction.outfile
 
 
     split_ms_by_scan: 
