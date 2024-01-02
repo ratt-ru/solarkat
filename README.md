@@ -5,7 +5,7 @@ Radio frequency interference is a growing problem in radio astronomy, especially
 
 
 ## Installation from the repository
- You can get SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+ You can have access to SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
 ```
 git clone https://github.com/ratt-ru/solarkat.git
 ```
