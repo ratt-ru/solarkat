@@ -20,4 +20,4 @@ Example:
 stimela run solarkat.yaml solarkat obs=L1
 ```
 
-More details about the  SolarKAT pipeline can be found in the documentation here https://solarkat-docs.readthedocs.io/en/latest/index.html.
+More details about the  SolarKAT pipeline can be found in the Documentation here https://solarkat-docs.readthedocs.io/en/latest/index.html.
