@@ -114,3 +114,4 @@ yarl==1.8.1
 zarr==2.13.2
 zict==2.2.0
 zipp==3.8.1
+-e git+https://github.com/ratt-ru/breizorro.git#egg=breizoirro
