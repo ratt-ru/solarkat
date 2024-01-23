@@ -153,8 +153,6 @@ solarkat:
     strArray: 
       dtype: List[str]
 
-
-# size 8000 for obs 1 and 3. Size  [14200, 14200] for obs2
     
   steps:
     image-1:
@@ -163,16 +161,10 @@ solarkat:
       params: 
         column: DATA
         niter: 50000
-        #padding: 2
         size: [8000, 8000] 
         auto-threshold: 3
         temp_dir: '{root.dir_out}/tmp'
-        save-source-list: false
-        use-wgridder: true
-        multiscale: false
-        wgridder-accuracy: 1e-6 
-
-#for obs1 we tested thresold of 5 (which gives us not avery good result)
+       
 
     mask-1:
       cab: breizorro 
@@ -188,17 +180,13 @@ solarkat:
       _use: lib.steps.wsclean.image
       params:
         column: DATA
-        niter: 50000
+        niter: 100000
         padding: 2
         size: [8000, 8000] 
-        auto-threshold: =UNSET
+        auto-threshold: 3
         fits-mask: "{previous.mask}"
         temp_dir: '{root.dir_out}/tmp' 
-        save-source-list: false
-        use-wgridder: true
-        multiscale: false
-        wgridder-accuracy: 1e-6  
-
+        
 
     save-flags-1: 
       cab: flagman
@@ -207,21 +195,10 @@ solarkat:
         ms: '{recipe.ms}'
         name: "after 1GC"
         mode: save
-    
-
-    restore-flags-1: 
-      cab: flagman
-      info: 'Restoring the flags after 1GC, when needed.'
-      skip: true
-      params:
-        ms: '{recipe.ms}'
-        name: "after 1GC"
-        mode: restore
- 
 
     selfcal_1:
       cab: quartical
-      info: "Self calibration"
+      info: "Self-calibration"
       params:
         input_ms.path: '{recipe.ms}'
         solver.terms: [K]
@@ -240,7 +217,7 @@ solarkat:
  
     save-flags-2: 
       cab: flagman
-      info: 'Saving the flags after 2GC'
+      info: 'Saving flags after 2GC'
       params:
         ms: '{recipe.ms}'
         name: "after 2GC"
@@ -251,83 +228,68 @@ solarkat:
       info: "Breizorro-masked deep I clean"
       _use: lib.steps.wsclean.image
       params:
-        column: CORRECTED_DATA
-        temp_dir: '{root.dir_out}/tmp'
-        niter: 100000
         padding: 2
-        size: [8000, 8000]  
+        niter: 100000
+        size: [8000, 8000] 
+        column: CORRECTED_DATA
         auto-threshold: =UNSET
-        multiscale: false
-        save-source-list: false
+        temp_dir: '{root.dir_out}/tmp'
         fits-mask: "{steps.image-1.prefix}-mask.fits"
-        use-wgridder: true
-        wgridder-accuracy: 1e-6 
 
- 
+
     mask-2: 
       cab: breizorro
       info: 'Creating a fits mask with breizorro'
       params:
-        restored_image: '{previous.restored-mfs}'
-        mask: '{previous.prefix}-mask.fits'
         threshold: 15
-
+        mask: '{previous.prefix}-mask.fits'
+        restored_image: '{previous.restored-mfs}'
+        
 
     image-4: 
       info: "Breizorro-masked deep I clean"
       _use: lib.steps.wsclean.image
       params:
+        padding: 2
+        niter: 100000
+        size: [8000, 8000]
+        auto-threshold: =UNSET
         column: CORRECTED_DATA
         temp_dir: '{root.dir_out}/tmp'
-        save-source-list: true
         fits-mask: "{previous.mask}"
-        auto-threshold: =UNSET
-        niter: 100000
-        padding: 2
-        size: [8000, 8000] 
-        multiscale: false
-        use-wgridder: true
-        wgridder-accuracy: 1e-6 
-
-
+        
 
     selfcal_2:
       cab: quartical
       info: "Self calibration"
       params:
         input_ms.path: '{recipe.ms}'
+        input_ms.time_chunk: '14'
+        input_model.recipe: MODEL_DATA
         solver.terms: [K]
         K.type: phase
         K.direction_dependent: false
         K.freq_interval: '0'
         K.time_interval: '4' 
         K.initial_estimate: true
-        input_ms.time_chunk: '14' #'128'
         solver.iter_recipe: [100]
-        input_model.recipe: MODEL_DATA
         output.overwrite: true
         output.products: [corrected_data]
         output.columns: [CORRECTED_DATA]
-
 
 
     image-5: 
       info: "Breizorro-masked deep I clean"
       _use: lib.steps.wsclean.image
       params:
+        padding: 2  
+        niter: 100000
+        auto-threshold: 3
+        size: [8000, 8000]
         column: CORRECTED_DATA
         temp_dir: '{root.dir_out}/tmp'
-        save-source-list: true
-        #fits-mask: '{recipe.dir_out}/im3/im3-mask.fits' 
-        auto-threshold: 3 #=UNSET
-        niter: 100000
-        padding: 2
-        size: [8000, 8000] 
-        multiscale: false
-        use-wgridder: true
-        wgridder-accuracy: 1e-6 
-
-
+        fits-mask: "{steps.image-3.prefix}-mask.fits"
+         
 
     backup_model_data-1:
       cab: rename_model_data
@@ -393,7 +355,7 @@ solarkat:
         outfile: '{recipe.dir_out}/sun_coordinates.txt'
 
 
-    shift_to_sun: #Sorted in the pyhton file
+    shift_to_sun: #Sorted in the Python file
       cab: shift_coords
       info: 'Change the phase centre of the main field to the Sun.'
       params:
@@ -420,14 +382,9 @@ solarkat:
               niter: 0
               size: 6000
               ms: '{recipe.mss}'
-              use-wgridder: false
               column: CORRECTED_DATA
-              wgridder-accuracy: 1e-6
               temp_dir: '{root.dir_out}/tmp'
-              no-update-model-required: true
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.sun_images_dir}/" + STRIPEXT(BASENAME(recipe.mss))
-
-
 
 
     create_ds9_regions:
@@ -473,7 +430,6 @@ solarkat:
                     mask: ="{root.dir_out}" + "/" + "{root.masks_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}-mask.fits"
 
 
-
     deconvolve_sun:
       info: " clean imaging of the Sun for a better model, using the masks created from the make_mask step."
       params:
@@ -507,13 +463,10 @@ solarkat:
               fits-mask: ="{root.dir_out}" + "/" + "{root.masks_dir_out}" + "/" + STRIPEXT(BASENAME(recipe.mss)) + "-mask.fits"
 
 
-
     predict_sun_model:
-      info: " Predict Sun Model to the MODEL_DATA column." 
-      skip: true     
+      info: " Predict Sun Model to the MODEL_DATA column."     
       params: 
         ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")
-        #ms_list: =SORT('scans')
       recipe:
         inputs:
           scans:
@@ -537,7 +490,6 @@ solarkat:
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.ms)) #+ "-MFS"
 
 
-
     quality_control_imaging1:
       info: "Image Sun field after subtraction. This step serves to inspect the subtration process"
       params:
@@ -555,14 +507,10 @@ solarkat:
             params:
               ms: '{recipe.mss}' 
               niter: 0
-              padding: =UNSET
               size:   [8000, 8000]  
               column: MODEL_DATA
-              auto-threshold: =UNSET
-              no-update-model-required: true
               temp_dir: '{root.dir_out}/tmp'
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control}/" + STRIPEXT(BASENAME(recipe.mss))   
-
 
 
     rephase: #Sorted in the pyhton file
@@ -592,14 +540,10 @@ solarkat:
             params:
               ms: '{recipe.mss}' 
               niter: 0
-              padding: 2
               size:  [8000, 8000]  
               column: CORRECTED_DATA
-              auto-threshold: =UNSET
               temp_dir: '{root.dir_out}/tmp'
-              no-update-model-required: true
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control2}/" + STRIPEXT(BASENAME(recipe.mss))   
-
 
 
     quality_control_imaging3:
@@ -619,14 +563,10 @@ solarkat:
             params:
               ms: '{recipe.mss}' 
               niter: 0
-              padding: 2
               size:  [8000, 8000]  
               column: MODEL_DATA
-              auto-threshold: =UNSET
               temp_dir: '{root.dir_out}/tmp'
-              no-update-model-required: true
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control3}/" + STRIPEXT(BASENAME(recipe.mss))   
-
 
 
     add_model_data_columnn:
@@ -638,8 +578,7 @@ solarkat:
         like_col: 'MODEL_DATA_ORIGINAL'
 
 
-
-    data_storage1:
+    data_storage:
       info: 'Copying data from MODEL_DATA to MODEL_DATA_SUN, from each scan in the MS to the single MS'
       cab:  copy_model_data_to_model_data_sun
       params:
@@ -649,9 +588,8 @@ solarkat:
         ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
 
 
-
     subtract_sun:
-      info: 'Subtracting the SOLAR_MODEL form the visibilities (CORRECTED_DATA) in the original MS'
+      info: 'Subtracting the SOLAR_MODEL from the visibilities (CORRECTED_DATA) in the original MS'
       cab: taql_update
       params:
         ms: '{recipe.ms}'
@@ -665,13 +603,11 @@ solarkat:
         ms: '{recipe.ms}'
         padding: 2                      
         niter: 100000
-        size: [8000, 8000]    #[16300, 16300] #[10240, 10240] 
         auto-threshold: 3
-        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
-        use-wgridder: true
+        size: [8000, 8000] 
         column: CORRECTED_DATA_SUN
-        wgridder-accuracy: 1e-6
         temp_dir: '{root.dir_out}/tmp'
+        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
 
 
     image-6a:
@@ -682,13 +618,10 @@ solarkat:
         padding: 2                      
         niter: 0
         size:  [8000, 8000]     #[16300, 16300] #[10240, 10240] 
-        auto-threshold: 3
-        use-wgridder: true
         column: MODEL_DATA
         fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
-        wgridder-accuracy: 1e-6
         temp_dir: '{root.dir_out}/tmp'
-        no-update-model-required: true
+        
         #From here we have the improved MODEL_DATA of, without the Sun (which will be used in the peeling step with the MODEL_DATA_SUN column) 
 
 
@@ -697,15 +630,11 @@ solarkat:
       _use: lib.steps.wsclean.image
       params:
         ms: '{recipe.ms}'
-        padding: 2                      
         niter: 0
-        size: [8000, 8000]     #[16300, 16300] #[10240, 10240] 
-        auto-threshold: 3
-        use-wgridder: true
+        padding: 2                      
+        size: [8000, 8000]
         column: MODEL_DATA_SUN
-        wgridder-accuracy: 1e-6
-        temp_dir: '{root.dir_out}/tmp'
-        no-update-model-required: true
+        temp_dir: '{root.dir_out}/tmp
 
 
     save-flags-3: 
@@ -713,9 +642,8 @@ solarkat:
       params:
         ms: '{recipe.ms}'
         name: "Before 3GC"
-        mode: restore
+        mode: save #/restore 
    
-
     
     cal_and_peel_sol:
       cab: quartical
@@ -771,21 +699,15 @@ solarkat:
       info: "Deconvolve the improved image"
       _use: lib.steps.wsclean.image
       params:
-        column: CORRECTED_RESIDUAL
-        temp_dir: '{root.dir_out}/tmp'
-        save-source-list: true
-        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
+        padding: 2
         niter: 100000
         auto-threshold: 3
         size: [8000, 8000] 
-        padding: 2
-        multiscale: false
-        use-wgridder: true
-        #no-update-model-required: true
-        wgridder-accuracy: 1e-6 
-
-
-
+        column: CORRECTED_RESIDUAL
+        temp_dir: '{root.dir_out}/tmp'
+        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
+        
+  
     mask-4: 
       cab: breizorro
       info: 'Creating a fits mask with breizorro'
@@ -799,15 +721,13 @@ solarkat:
       info: "Deconvolve the improved image"
       _use: lib.steps.wsclean.image
       params:
-        column: CORRECTED_RESIDUAL
-        temp_dir: '{root.dir_out}/tmp'
-        save-source-list: true
-        fits-mask:  '{previous.mask}'
+        padding: 2
         niter: 100000
         auto-threshold: 3
-        size: [8000, 8000]  
-        padding: 2
-        multiscale: false
-        use-wgridder: true
-        wgridder-accuracy: 1e-6 
-
+        size: [8000, 8000] 
+        column: CORRECTED_RESIDUAL
+        temp_dir: '{root.dir_out}/tmp'
+        fits-mask:  '{previous.mask}'
+         
+        
+        
