@@ -131,12 +131,30 @@ solarkat:
         concat_image: 'concat_image'
         qcal_output_dir: 'peeled.qc'
         band: L
+
+      L4:
+        ms: '/home/samboco/solarKAT/SUN_IMAGING_STEPS/pipeline/msdir/1630830331_sdp_l0_719ch_SN2021smj.ms'
+        dir_out: obs1630
+        perscan_dir_out: "ms_scans"
+        sun_images_dir: "sun_images"
+        regions_dir_out: "region_files"
+        masks_dir_out: "sun_masks"
+        clean_image_sun: "clean_image_sun"
+        selfcal_subtracted: 'self_sun_subtracted'
+        quality_control: 'quality_control_subt_images'
+        quality_control1: 'quality_control_subt_images1'
+        quality_control2: 'quality_control_subt_images2'
+        quality_control3: 'quality_control_subt_images3'
+        residual_vis_dir: 'residual_vis'
+        concat_image: 'concat_image'
+        qcal_output_dir: 'peeled.qc'
+        band: L
     
 
 
   inputs:
     obs:
-      choices: [L1, L2, UHF, L3]
+      choices: [L1, L2, UHF, L3, L4]
       info: "Selects observation, see labels above"
     suffix:
       dtype: str
@@ -161,8 +179,8 @@ solarkat:
       params: 
         column: DATA
         niter: 50000
-        size: [8000, 8000] 
         auto-threshold: 3
+        size: [8000, 8000] 
         temp_dir: '{root.dir_out}/tmp'
        
 
@@ -170,20 +188,20 @@ solarkat:
       cab: breizorro 
       info: 'Creating a fits mask with breizorro'
       params:
-        restored_image: "{previous.restored-mfs}"
-        mask: '{previous.prefix}-mask.fits'
         threshold: 15
-
-
+        mask: '{previous.prefix}-mask.fits'
+        restored_image: "{previous.restored-mfs}"
+        
+        
     image-2: 
       info: "Breizorro-masked deep I clean"
       _use: lib.steps.wsclean.image
       params:
+        padding: 2
         column: DATA
         niter: 100000
-        padding: 2
-        size: [8000, 8000] 
         auto-threshold: 3
+        size: [8000, 8000]   
         fits-mask: "{previous.mask}"
         temp_dir: '{root.dir_out}/tmp' 
         
@@ -196,20 +214,21 @@ solarkat:
         name: "after 1GC"
         mode: save
 
+
     selfcal_1:
       cab: quartical
       info: "Self-calibration"
       params:
         input_ms.path: '{recipe.ms}'
+        input_ms.time_chunk: '128'
+        input_model.recipe: MODEL_DATA
         solver.terms: [K]
+        solver.iter_recipe: [100]
         K.type: phase
-        K.direction_dependent: false
         K.freq_interval: '0'
         K.time_interval: '4' 
-        K.initial_estimate: true
-        input_ms.time_chunk: '128'
-        solver.iter_recipe: [100]
-        input_model.recipe: MODEL_DATA
+        K.initial_estimate: true       
+        K.direction_dependent: false
         output.overwrite: true
         output.products: [corrected_data]
         output.columns: [CORRECTED_DATA]
@@ -266,13 +285,13 @@ solarkat:
         input_ms.path: '{recipe.ms}'
         input_ms.time_chunk: '14'
         input_model.recipe: MODEL_DATA
-        solver.terms: [K]
+        solver.terms: [K]        
+        solver.iter_recipe: [100]
         K.type: phase
-        K.direction_dependent: false
         K.freq_interval: '0'
         K.time_interval: '4' 
         K.initial_estimate: true
-        solver.iter_recipe: [100]
+        K.direction_dependent: false
         output.overwrite: true
         output.products: [corrected_data]
         output.columns: [CORRECTED_DATA]
@@ -291,7 +310,7 @@ solarkat:
         fits-mask: "{steps.image-3.prefix}-mask.fits"
          
 
-    backup_model_data-1:
+    backup_model_data:
       cab: rename_model_data
       info: 'Renaming the MODEL_DATA visibilities to ORIGINAL_MODEL_DATA(saving the MODEL_DATA of the original visibilities)'
       skip: false
@@ -302,17 +321,17 @@ solarkat:
 
 
     scan_numbers_extraction:
-      info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'
-      cab: scan_numbers
+      info: 'Extract a list of unique scan numbers from a Seasurement Set. The scans output parameter is a list of strings representing the unique scan numbers.'
+      cab: extract_and_save_scan_numbers
       params:
         ms: '{recipe.ms}'
-        outfile: ='{recipe.dir_out}/scan_numbers.txt' 
+        output_file: ='{recipe.dir_out}/scan_numbers.txt' 
 
 
     load_scan_numbers:
       cab: load_scan_numbers
       params:
-        scans_file: =steps.scan_numbers_extraction.outfile
+        scans_file: =steps.scan_numbers_extraction.output_file
 
 
     split_ms_by_scan: 
@@ -343,7 +362,7 @@ solarkat:
       cab: get_old_coords
       info: 'Get the phase centre coordinates of the scans main field.'
       params: 
-        outfile: '{recipe.dir_out}/old_perscans_coods.txt'
+        output_file: '{recipe.dir_out}/old_perscans_coods.txt'
         ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
                 
 
@@ -352,15 +371,15 @@ solarkat:
       info: 'Determine the Sun coordinates (RA/DEC) for all scans in the MS and write into a txt file '
       params:
         ms: '{recipe.ms}'
-        outfile: '{recipe.dir_out}/sun_coordinates.txt'
+        output_file: '{recipe.dir_out}/sun_coordinates.txt'
 
 
-    shift_to_sun: #Sorted in the Python file
+    shift_to_sun: 
       cab: shift_coords
       info: 'Change the phase centre of the main field to the Sun.'
       params:
         ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
-        coords: '{recipe.steps.get_sun_coordinates.outfile}'
+        coords: '{recipe.steps.get_sun_coordinates.output_file}'
         splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
         
 
@@ -406,7 +425,7 @@ solarkat:
           load_scan_numbers:
             cab: load_scan_numbers
             params:
-              scans_file: =root.steps.scan_numbers.outfile  
+              scans_file: =root.steps.scan_numbers_extraction.output_file  
           making_masks:
             params:
               region_dir:  "{root.dir_out}/{root.regions_dir_out}"  
@@ -452,7 +471,7 @@ solarkat:
               size: 6000
               niter: 100000
               multiscale: true
-              threshold: 3.55e-4 #9.26e-5 #obs1 4.38e-5
+              threshold: 3.55e-4 
               join_channels: true
               fit_spectral_pol: 4
               auto-threshold: =UNSET  
@@ -484,7 +503,6 @@ solarkat:
             params:
               size:  6000
               predict: true
-              padding: 2
               ms: '{recipe.ms}'
               temp_dir: '{root.dir_out}/tmp'
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.ms)) #+ "-MFS"
@@ -506,9 +524,9 @@ solarkat:
             _use: lib.steps.wsclean.image
             params:
               ms: '{recipe.mss}' 
-              niter: 0
-              size:   [8000, 8000]  
+              niter: 0  
               column: MODEL_DATA
+              size:   [8000, 8000]
               temp_dir: '{root.dir_out}/tmp'
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control}/" + STRIPEXT(BASENAME(recipe.mss))   
 
@@ -518,7 +536,7 @@ solarkat:
       info: "Restore main field"
       params:
         ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
-        coords: '{recipe.steps.get_perscan_old_coords.outfile}' 
+        coords: '{recipe.steps.get_perscan_old_coords.output_file}' 
         splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
 
 
@@ -611,17 +629,15 @@ solarkat:
 
 
     image-6a:
-      info: "quality_control: Image the improved model"
+      info: "Quality_control: Image the improved model"
       _use: lib.steps.wsclean.image
       params:
-        ms: '{recipe.ms}'
-        padding: 2                      
+        ms: '{recipe.ms}'                     
         niter: 0
-        size:  [8000, 8000]     #[16300, 16300] #[10240, 10240] 
-        column: MODEL_DATA
-        fits-mask:  '{recipe.dir_out}/im3/im3-mask.fits'
+        column: MODEL_DATA 
+        size:  [8000, 8000]
         temp_dir: '{root.dir_out}/tmp'
-        
+
         #From here we have the improved MODEL_DATA of, without the Sun (which will be used in the peeling step with the MODEL_DATA_SUN column) 
 
 
@@ -630,11 +646,10 @@ solarkat:
       _use: lib.steps.wsclean.image
       params:
         ms: '{recipe.ms}'
-        niter: 0
-        padding: 2                      
+        niter: 0                     
         size: [8000, 8000]
         column: MODEL_DATA_SUN
-        temp_dir: '{root.dir_out}/tmp
+        temp_dir: '{root.dir_out}/tmp'
 
 
     save-flags-3: 
