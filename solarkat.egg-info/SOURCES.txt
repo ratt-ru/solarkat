@@ -1,0 +1,11 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+solarkat/__init__.py
+solarkat/solarkat.py
+solarkat.egg-info/PKG-INFO
+solarkat.egg-info/SOURCES.txt
+solarkat.egg-info/dependency_links.txt
+solarkat.egg-info/requires.txt
+solarkat.egg-info/top_level.txt
