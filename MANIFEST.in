@@ -1,0 +1,2 @@
+include /solarkat/configuration/solarkat.yaml
+include /solarkat/configuration/solarkat-cabs.yaml

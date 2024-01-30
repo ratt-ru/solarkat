@@ -228,6 +228,30 @@ cabs:
           repeat: list
 
 
+  crystalball:
+    command: crystalball
+    virtual_env: /home/samboco/Virtual_enviroments/cball_env 
+    policies:
+      prefix: '--'
+      replace: {'_': '-'}
+    inputs:
+      ms:
+        dtype: MS
+        writable: true
+        required: true
+        policies:
+          positional: true
+      output_column:
+        dtype: str
+        required: true
+      sky_model:
+        dtype: File
+        required: true
+      within:
+        dtype: File
+      num_sources:
+        dtype: int
+
 
   breizorro:
     command: breizorro

@@ -1,16 +1,18 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='solarkat',  # Replace with your own package's name
-    version='0.1.0',  # Package version
-    author='Victória Samboco',  # Your name
-    author_email='vicky.samboco@gmail.com',  # Your email
-    description='A solar imaging pipeline for solar interference mitigation in MeerkAT,  # Short description
-    long_description=open('README.md').read(),  # Long description read from the README.md file
-    long_description_content_type='text/markdown',  # Content type of the long description, typically text/markdown or text/x-rst
-    url='https://github.com/ratt-ru/solarkat.git',  # URL to your package's repository
-    packages=find_packages(),  # Automatically find all packages in the directory
-    install_requires=[  # List of dependencies
+    name='solarkat',  
+    version='0.1.0', 
+    author='Victória Samboco',
+    author_email='vicky.samboco@gmail.com', 
+    description='SolarKAT: A solar imaging pipeline for solar interference mitigation in MeerkAT',
+    long_description=open('README.md').read(), 
+    repository='https://github.com/ratt-ru/solarkat.git',  
+    documentation = 'https://solarkat-docs.readthedocs.io/en/latest/',
+    packages=find_packages(), 
+    license = "MIT",
+
+    install_requires=[
         'aiobotocore==2.4.0',
         'aiohttp==3.8.1',
         'aioitertools==0.10.0',
@@ -39,7 +41,7 @@ setup(
         'configparser==5.3.0',
         'contextlib2==21.6.0',
         'contourpy==1.0.5',
-        '-e git+https://github.com/paoloserra/crystalball.git@1c24d1fbaea8a22c31a42a941103e305d9906d0f#egg=crystalball',
+        'crystalball==0.4.1',
         'cycler==0.11.0',
         'dask==2022.9.2',
         'dask-ms==0.2.14',
@@ -97,7 +99,7 @@ setup(
         'python-dateutil==2.8.2',
         'pytz==2022.4',
         'PyYAML==6.0',
-        '-e git+https://github.com/ratt-ru/QuartiCal.git@353279b119cfbafcb53f16154bef41e16f254ca9#egg=quartical',
+        'quartical==0.2.0',
         'regions==0.5',
         'requests==2.28.1',
         'rich==12.5.1',
@@ -109,7 +111,7 @@ setup(
         'scipy==1.9.1',
         'six==1.16.0',
         'sortedcontainers==2.4.0',
-        '-e git+https://github.com/caracal-pipeline/stimela2.git@3a631db55ee3c9d758c7f55300fb8de7716d38de#egg=stimela',
+        'stimela2==2.0rc4',
         'tabulate==0.8.10',
         'tblib==1.7.0',
         'tbump==6.9.0',
@@ -127,24 +129,24 @@ setup(
         'zarr==2.13.2',
         'zict==2.2.0',
         'zipp==3.8.1',
-        '-e git+https://github.com/ratt-ru/breizorro.git#egg=breizoirro'
+        'breizoirro==0.1.2'
+    ],
 
-      # Replace these with your actual dependencies
-      # Add more dependencies as needed
+
+    classifiers=[ 
+        'Development Status :: 1 - Alpha', 
+        'Intended Audience :: Science/Research',  
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Topic :: Scientific/Engineering :: Astronomy'
     ],
-    classifiers=[  # Classifiers help categorize your project and give it more visibility
-        'Development Status :: 3 - Alpha',  # Choose the appropriate development status
-        'Intended Audience :: Radio astronomers, Developers',  # Define the audience for your package
-        'License :: OSI Approved :: MIT License',  # Choose the appropriate license
-        'Programming Language :: Python :: 3',  # Supported Python versions
-        'Programming Language :: Python :: 3.8',  # Specify specific Python versions if needed
-        # Add more classifiers as appropriate for your package
-    ],
-    python_requires='>=3.8',  # Minimum version requirement of the Python for your package
-    entry_points={  # Optional: Define console scripts or GUI scripts here
-        'console_scripts': [
-            'your_command = your_package.module:function',
-            # Example: 'pip = pip._internal.cli.main:main'
-        ]
-    },
+
+    include = [
+    'solarkat/solarkat-pipeline/solarkat.yaml',
+    'solarkat/solarkat-pipeline/solarkat-cabs.yaml',
+    ]
 )

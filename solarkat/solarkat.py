@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import re
-import glob
 import numpy
-import logging
 import sys, os
 import subprocess
 import numpy as np
@@ -44,6 +42,7 @@ def extract_scan_number(ms_scan):
 
 #________________________________________________________________________________________________________________________________________________________
 
+
 def extract_and_save_scan_numbers(ms, output_file):
     '''
     Extracts unique scan numbers from the Measurement Set
@@ -71,9 +70,11 @@ def extract_and_save_scan_numbers(ms, output_file):
     
     return scans
 
+
 #________________________________________________________________________________________________________________________________________________________
 
 def rename_model_data_column(ms, oldname, newname):
+    
     '''
     Rename the 'MODEL_DATA' column to 'MODEL_DATA_ORIGINAL' in a Measurement Set (MS) table.
     Parameters:
@@ -92,7 +93,7 @@ def rename_model_data_column(ms, oldname, newname):
 
 ##########################################################################################################################################################
 
-ddef rename_columns(ms_list, oldname, newname):
+def rename_columns(ms_list, oldname, newname):
     '''
     Rename columns in a list of MS tables.
     '''
@@ -110,7 +111,6 @@ ddef rename_columns(ms_list, oldname, newname):
             ms.renamecol('oldname', 'newname')
         # close the MS table
         ms.close()
-
         print(f"Renaming completed for {ms_name}.")
     print("Rename column completed successfully.")
 
@@ -122,7 +122,7 @@ def get_old_coords(ms_list, output_file):
 
     Parameters:
     ms_list (str): Path to the measurement sets files.
-    output_file (str): Path to the output file.
+    outfile (str): Path to the output file.
 
     Returns:
     None
@@ -153,12 +153,11 @@ def get_old_coords(ms_list, output_file):
         field_dir.close()
         print(f"Processing of {ms} complete.")
 
-
     with open(output_file,'wt') as f:
         for old_coord in old_coords:
             f.write(old_coord)
             f.writelines('\n')
-
+    print("Old coordinates extraction complete.")
     return old_coords
 
 #________________________________________________________________________________________________________________________________________________________
@@ -169,7 +168,7 @@ def get_sun_coordinates(ms, output_file):
 
     Parameters:
     ms (str): Path to the measurement set file.
-    output_file (str): Path to the output file.
+    outfile (str): Path to the output file.
 
     Returns:
     None
@@ -207,7 +206,9 @@ def get_sun_coordinates(ms, output_file):
     with open(output_file, 'wt') as f:
         for line in lines:
             f.write(line + '\n')
+
     print(f"Sun coordinates extracted and saved to {output_file}.")
+
 
 #________________________________________________________________________________________________________________________________________________________
 
@@ -231,9 +232,7 @@ def shift_coordinates(ms_list, coords, splitted_ms_dir):
     for i, ms in enumerate(sorted_ms_list):
         splitted_ms = os.path.join(splitted_ms_dir, os.path.basename(ms).replace(".ms", ".ms"))
         line = lines[i % num_lines].strip()
-       
         print(f"Changing phase centre coordinates for {ms}...")
-
         os.system(f"chgcentre {ms} {line} {splitted_ms}")
         print(f'Scan {ms} Done.')
     print("Phase center changed successfully.")
@@ -245,7 +244,6 @@ def create_ds9_region_from_file(input_file, output_dir, ms):
     """
     Function to create a DS9 region file for each coordinate in the input file
     """
-    
     #Open the MS table
     tab = table(ms, readonly=True)
     # Extract the scan numbers
@@ -312,6 +310,7 @@ def add_column_to_ms(ms, col_names, like_col):
     tb.close()
     return success
 
+
 #________________________________________________________________________________________________________________________________________________________
 
 
@@ -369,6 +368,9 @@ def copy_model_data_to_model_data_sun(ms, ms_list, copycol, tocol):
 
     # Close the maintab
     maintab.close()
+
     print(f"Copying {copycol} to {tocol} in {ms} completed successfully.")
 
+
 #________________________________________________________________________________________________________________________________________________________
+

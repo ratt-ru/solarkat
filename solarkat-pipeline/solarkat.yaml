@@ -61,7 +61,7 @@ solarkat:
   assign_based_on:
     obs:
       L1:
-        ms: msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
+        ms: 'msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms'
         dir_out: obs1
         perscan_dir_out: "ms_scans"
         sun_images_dir: "sun_images"
@@ -79,7 +79,7 @@ solarkat:
         band: L
 
       L2:
-        ms: msdir/1671435077_sdp_l0_1024ch_GRS1747-312.ms 
+        ms: 'msdir/1671435077_sdp_l0_1024ch_GRS1747-312.ms' 
         dir_out: obs2
         perscan_dir_out: "ms_scans"
         sun_images_dir: "sun_images"
@@ -97,7 +97,7 @@ solarkat:
         band: L
 
       UHF:
-        ms: msdir/1583662427_sdp_l0.1024ch_1024ch_J033230-280757.ms 
+        ms: 'msdir/1583662427_sdp_l0.1024ch_1024ch_J033230-280757.ms' 
         dir_out: obs3
         perscan_dir_out: "ms_scans"
         sun_images_dir: "sun_images"
@@ -132,29 +132,11 @@ solarkat:
         qcal_output_dir: 'peeled.qc'
         band: L
 
-      L4:
-        ms: '/home/samboco/solarKAT/SUN_IMAGING_STEPS/pipeline/msdir/1630830331_sdp_l0_719ch_SN2021smj.ms'
-        dir_out: obs1630
-        perscan_dir_out: "ms_scans"
-        sun_images_dir: "sun_images"
-        regions_dir_out: "region_files"
-        masks_dir_out: "sun_masks"
-        clean_image_sun: "clean_image_sun"
-        selfcal_subtracted: 'self_sun_subtracted'
-        quality_control: 'quality_control_subt_images'
-        quality_control1: 'quality_control_subt_images1'
-        quality_control2: 'quality_control_subt_images2'
-        quality_control3: 'quality_control_subt_images3'
-        residual_vis_dir: 'residual_vis'
-        concat_image: 'concat_image'
-        qcal_output_dir: 'peeled.qc'
-        band: L
-    
 
 
   inputs:
     obs:
-      choices: [L1, L2, UHF, L3, L4]
+      choices: [L1, L2, UHF, L3]
       info: "Selects observation, see labels above"
     suffix:
       dtype: str
@@ -252,6 +234,84 @@ solarkat:
         size: [8000, 8000] 
         column: CORRECTED_DATA
         auto-threshold: =UNSET
+        save-source-list: true
+        temp_dir: '{root.dir_out}/tmp'
+        fits-mask: "{steps.image-1.prefix}-mask.fits"
+
+
+
+    dd_predict:
+      cab: crystalball 
+      info: "Predicts off-axis source into separate column"
+      params:                                       
+        ms: '{recipe.ms}'                           
+        within: '{root.dir_out}/im3/bsource.reg'                    
+        output_column: DIR1_DATA                    
+        sky_model: '{root.dir_out}/im3/im3-sources.txt'  
+
+
+
+    peeling_source:
+      cab: quartical
+      info: 'Selfcal + peel bright source'
+      params:
+        input_ms.path: '{recipe.ms}'
+        input_ms.weight_column: WEIGHT_SPECTRUM
+        input_ms.time_chunk: '14'
+        input_ms.freq_chunk: '0'
+        input_ms.select_uv_range: [0,0]
+        input_ms.group_by: [FIELD_ID,DATA_DESC_ID,SCAN_NUMBER]
+        input_model.recipe: MODEL_DATA~DIR1_DATA:DIR1_DATA
+        input_model.apply_p_jones: false
+        input_ms.is_bda: False
+        solver.terms: [G,dE]
+        solver.iter_recipe: [100,100,100,100]
+        solver.propagate_flags: true
+        solver.robust: false 
+        solver.threads: 4
+        dask.threads: 8
+        output.gain_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/peeled.qc'
+        output.log_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/'
+        output.overwrite: true
+        output.products: [corrected_residual]
+        output.columns: [CORRECTED_DATA]
+        output.subtract_directions: [1]
+        output.flags: true 
+        output.apply_p_jones_inv: false
+        mad_flags.enable: false
+        dask.scheduler: threads
+        G.type: delay_and_offset
+        G.direction_dependent: false
+        G.time_interval: 2
+        G.freq_interval: 0
+        G.initial_estimate: false
+        dE.type: complex
+        dE.time_interval: 14
+        dE.freq_interval: 64 
+        dE.initial_estimate: False
+        dE.direction_dependent: true
+        dE.pinned_directions: [0]   
+
+
+    save-flags-3: 
+      cab: flagman
+      info: 'Restoring the flags after 1GC, when needed.'
+      skip: true
+      params:
+        ms: '{recipe.ms}'
+        name: "after 3GC"
+        mode: save
+
+
+    image-4: 
+      info: "Breizorro-masked deep I clean"
+      _use: lib.steps.wsclean.image
+      params:
+        padding: 2
+        niter: 100000
+        size: [8000, 8000]
+        auto-threshold: =UNSET
+        column: CORRECTED_DATA
         temp_dir: '{root.dir_out}/tmp'
         fits-mask: "{steps.image-1.prefix}-mask.fits"
 
@@ -265,38 +325,6 @@ solarkat:
         restored_image: '{previous.restored-mfs}'
         
 
-    image-4: 
-      info: "Breizorro-masked deep I clean"
-      _use: lib.steps.wsclean.image
-      params:
-        padding: 2
-        niter: 100000
-        size: [8000, 8000]
-        auto-threshold: =UNSET
-        column: CORRECTED_DATA
-        temp_dir: '{root.dir_out}/tmp'
-        fits-mask: "{previous.mask}"
-        
-
-    selfcal_2:
-      cab: quartical
-      info: "Self calibration"
-      params:
-        input_ms.path: '{recipe.ms}'
-        input_ms.time_chunk: '14'
-        input_model.recipe: MODEL_DATA
-        solver.terms: [K]        
-        solver.iter_recipe: [100]
-        K.type: phase
-        K.freq_interval: '0'
-        K.time_interval: '4' 
-        K.initial_estimate: true
-        K.direction_dependent: false
-        output.overwrite: true
-        output.products: [corrected_data]
-        output.columns: [CORRECTED_DATA]
-
-
     image-5: 
       info: "Breizorro-masked deep I clean"
       _use: lib.steps.wsclean.image
@@ -308,6 +336,39 @@ solarkat:
         column: CORRECTED_DATA
         temp_dir: '{root.dir_out}/tmp'
         fits-mask: "{steps.image-3.prefix}-mask.fits"
+
+        
+    # selfcal_2:
+    #   cab: quartical
+    #   info: "Self calibration"
+    #   params:
+    #     input_ms.path: '{recipe.ms}'
+    #     input_ms.time_chunk: '14'
+    #     input_model.recipe: MODEL_DATA
+    #     solver.terms: [K]        
+    #     solver.iter_recipe: [100]
+    #     K.type: phase
+    #     K.freq_interval: '0'
+    #     K.time_interval: '4' 
+    #     K.initial_estimate: true
+    #     K.direction_dependent: false
+    #     output.overwrite: true
+    #     output.products: [corrected_data]
+    #     output.columns: [CORRECTED_DATA]
+
+    # image-5a: 
+    #   info: "Breizorro-masked deep I clean"
+    #   _use: lib.steps.wsclean.image
+    #   skip: true
+    #   params:        
+    #     padding: 2
+    #     niter: 100000
+    #     size: [6000, 6000]  
+    #     column: CORRECTED_DATA
+    #     temp_dir: '{root.dir_out}/tmp'
+    #     fits-mask: "{steps.image-4.prefix}-mask.fits"
+    #     auto-threshold: =UNSET
+ 
          
 
     backup_model_data:
@@ -531,7 +592,7 @@ solarkat:
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.quality_control}/" + STRIPEXT(BASENAME(recipe.mss))   
 
 
-    rephase: #Sorted in the pyhton file
+    rephase:
       cab: shift_coords
       info: "Restore main field"
       params:
@@ -652,7 +713,7 @@ solarkat:
         temp_dir: '{root.dir_out}/tmp'
 
 
-    save-flags-3: 
+    save-flags-4: 
       cab: flagman
       params:
         ms: '{recipe.ms}'
@@ -702,7 +763,7 @@ solarkat:
         dE.pinned_directions: [0]   
 
 
-    save-flags-4: 
+    save-flags-5: 
       cab: flagman
       params:
         ms: '{recipe.ms}'
@@ -710,7 +771,7 @@ solarkat:
         mode: save
 
 
-    image-7: 
+    image-7:
       info: "Deconvolve the improved image"
       _use: lib.steps.wsclean.image
       params:
