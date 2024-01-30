@@ -18,7 +18,7 @@ git clone https://github.com/ratt-ru/solarkat.git
 SolarKAT can be installed using pip: 
 
 ```
-pip intall solarkat
+pip install solarkat
 
 ```
 
