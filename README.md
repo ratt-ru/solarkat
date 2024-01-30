@@ -21,3 +21,19 @@ stimela run solarkat.yaml solarkat obs=L1
 ```
 
 More details can be found in the Documentation here https://solarkat-docs.readthedocs.io/en/latest/index.html.
+
+
+## Citing this Pipeline
+
+We kindly request that any work using this pipeline cites the following reference:
+
+@article{samboco2024solarkat,
+
+    author = {Samboco, Victória G. and  Heywood, Ian and Smirnov, Oleg},
+    title = {SolarKAT: A Solar Imaging Pipeline for MeerKAT},
+    journal = {Astrophysics Source Code Library},
+    pages={ascl ID},
+    year = {2024}
+    }
+
+Thank you for considering our request.
