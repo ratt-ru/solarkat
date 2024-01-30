@@ -4,14 +4,34 @@ MeerKAT as a solar telescope.
 Radio frequency interference is a growing problem in radio astronomy, especially for new-generation telescopes such as MeerKAT. Its wide field of view and high sensitivity make the MeerKAT telescope capable of capturing the Sun even when looking far away from it (close to 90 degrees). This ability facilitates also contamination from the out-of-field Sun, causing, in some conditions, data corruption (which we call solar radio interference). To address this issue we present the SolarKAT pipeline. SolarKAT is a solar imaging pipeline that aims to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
 
 
-## Installation from the repository
- You can have access to SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+## Installation 
+
+### Git clone
+You can have access to SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+
 ```
 git clone https://github.com/ratt-ru/solarkat.git
 ```
+
+### pip intallation
+
+SolarKAT can be installed using pip: 
+
+```
+pip intall solarkat
+
+```
+
+
 ## Running SolarKAT 
 
-Before running SolarKAT, activate the Stimela virtual environment. Then run:
+Before running SolarKAT, create and activate the Stimela virtual environment. 
+
+```
+$: virtualenv -p python3 stimela_env
+source stimela-env/bin/activate
+```
+Then run:
 ```
 stimela run recipe.yml [recipe_name] obs=obs
 ```
