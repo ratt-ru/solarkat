@@ -40,7 +40,7 @@ We kindly request that any work using this pipeline cites the following referenc
 ```
 @article{samboco2024solarkat,
     author = {Samboco, Victória G. and  Heywood, Ian and Smirnov, Oleg},
-    title = {SolarKAT: A Solar Imaging Pipeline for MeerKAT},
+    title = {SolarKAT: Solar Imaging Pipeline for MeerKAT},
     journal = {Astrophysics Source Code Library},
     pages={ascl:2401.013},
     month={January},
