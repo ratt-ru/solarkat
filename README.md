@@ -14,15 +14,6 @@ git clone https://github.com/ratt-ru/solarkat.git
 
 ```
 
-### Intallation using pip 
-
-SolarKAT can be installed using pip: 
-
-```
-pip install solarkat
-
-```
-
 ## Running SolarKAT 
 
 Before running SolarKAT, create and activate the Stimela virtual environment. 
