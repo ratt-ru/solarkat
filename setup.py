@@ -1,26 +1,28 @@
 from setuptools import setup, find_packages
 
+with open('README.md', 'r', encoding='utf-8') as file:
+    long_description = file.read()
+
 setup(
     name='solarkat',  
-    version='0.1.0', 
+    version='1.0.3', 
     author='Victória Samboco',
     author_email='vicky.samboco@gmail.com', 
-    description='SolarKAT: A solar imaging pipeline for solar interference mitigation in MeerkAT',
-    long_description=open('README.md').read(), 
+    description='Solar imaging pipeline for solar interference mitigation in MeerkAT', 
     repository='https://github.com/ratt-ru/solarkat.git',  
     documentation = 'https://solarkat-docs.readthedocs.io/en/latest/',
-    packages=find_packages(), 
-    license = "MIT",
-
+    packages=find_packages(),
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     install_requires=[
-        'aiobotocore==2.4.0',
-        'aiohttp==3.8.1',
+        'aiobotocore==2.11.1',
+        'aiohttp==3.9.3',
         'aioitertools==0.10.0',
         'aiosignal==1.2.0',
         'antlr4-python3-runtime==4.9.3',
         'appdirs==1.4.4',
         'asciitree==0.3.3',
-        'astLib==0.11.7',
+        'astLib==0.11.10',
         'astro-kittens==1.4.6',
         'astro-tigger-lsm==1.7.2',
         'astropy==5.1',
@@ -41,7 +43,6 @@ setup(
         'configparser==5.3.0',
         'contextlib2==21.6.0',
         'contourpy==1.0.5',
-        'crystalball==0.4.1',
         'cycler==0.11.0',
         'dask==2022.9.2',
         'dask-ms==0.2.14',
@@ -98,9 +99,9 @@ setup(
         'python-casacore==3.5.2',
         'python-dateutil==2.8.2',
         'pytz==2022.4',
-        'PyYAML==6.0',
-        'quartical==0.2.0',
-        'regions==0.5',
+        'PyYAML==6.0.1',
+        'quartical==0.2.1',
+        'regions>=0.5',
         'requests==2.28.1',
         'rich==12.5.1',
         'ruamel.yaml==0.17.21',
@@ -129,20 +130,19 @@ setup(
         'zarr==2.13.2',
         'zict==2.2.0',
         'zipp==3.8.1',
-        'breizoirro==0.1.2'
+        'breizoirro==0.1.2',
     ],
 
-
     classifiers=[ 
-        'Development Status :: 1 - Alpha', 
+        'Development Status :: 4 - Beta', 
         'Intended Audience :: Science/Research',  
         'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
-        'Topic :: Scientific/Engineering :: Astronomy'
+        'Topic :: Scientific/Engineering :: Astronomy',
     ],
 
     include = [

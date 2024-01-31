@@ -1,27 +1,28 @@
 Metadata-Version: 2.1
 Name: solarkat
-Version: 0.1.0
-Summary: SolarKAT: A solar imaging pipeline for solar interference mitigation in MeerkAT
+Version: 1.0.3
+Summary: Solar imaging pipeline for solar interference mitigation in MeerkAT
 Author: Victória Samboco
 Author-email: vicky.samboco@gmail.com
-License: MIT
-Classifier: Development Status :: 1 - Alpha
+Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: POSIX :: Linux
-Classifier: Programming Language :: Python :: 3Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Topic :: Scientific/Engineering :: Astronomy
+Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: aiobotocore==2.4.0
-Requires-Dist: aiohttp==3.8.1
+Requires-Dist: aiobotocore==2.11.1
+Requires-Dist: aiohttp==3.9.3
 Requires-Dist: aioitertools==0.10.0
 Requires-Dist: aiosignal==1.2.0
 Requires-Dist: antlr4-python3-runtime==4.9.3
 Requires-Dist: appdirs==1.4.4
 Requires-Dist: asciitree==0.3.3
-Requires-Dist: astLib==0.11.7
+Requires-Dist: astLib==0.11.10
 Requires-Dist: astro-kittens==1.4.6
 Requires-Dist: astro-tigger-lsm==1.7.2
 Requires-Dist: astropy==5.1
@@ -42,7 +43,6 @@ Requires-Dist: commonmark==0.9.1
 Requires-Dist: configparser==5.3.0
 Requires-Dist: contextlib2==21.6.0
 Requires-Dist: contourpy==1.0.5
-Requires-Dist: crystalball==0.4.1
 Requires-Dist: cycler==0.11.0
 Requires-Dist: dask==2022.9.2
 Requires-Dist: dask-ms==0.2.14
@@ -99,9 +99,9 @@ Requires-Dist: pytest==7.1.3
 Requires-Dist: python-casacore==3.5.2
 Requires-Dist: python-dateutil==2.8.2
 Requires-Dist: pytz==2022.4
-Requires-Dist: PyYAML==6.0
-Requires-Dist: quartical==0.2.0
-Requires-Dist: regions==0.5
+Requires-Dist: PyYAML==6.0.1
+Requires-Dist: quartical==0.2.1
+Requires-Dist: regions>=0.5
 Requires-Dist: requests==2.28.1
 Requires-Dist: rich==12.5.1
 Requires-Dist: ruamel.yaml==0.17.21
@@ -133,19 +133,39 @@ Requires-Dist: zipp==3.8.1
 Requires-Dist: breizoirro==0.1.2
 
 # SolarKAT
-MeerKAT as a solar telescope.  
 
-Radio frequency interference is a growing problem in radio astronomy, especially for new-generation telescopes such as MeerKAT. Its wide field of view and high sensitivity make the MeerKAT telescope capable of capturing the Sun even when looking far away from it (close to 90 degrees). This ability facilitates also contamination from the out-of-field Sun, causing, in some conditions, data corruption (which we call solar radio interference). To address this issue we present the SolarKAT pipeline. SolarKAT is a solar imaging pipeline that aims to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
+SolarKAT is a solar imaging pipeline developed to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
 
+Radio frequency interference is a growing problem in radio astronomy, especially for new-generation telescopes such as MeerKAT. Its wide field of view and high sensitivity make the MeerKAT telescope capable of capturing the Sun even when looking far away from it. This ability facilitates contamination from the out-of-field Sun, causing, in some conditions, data corruption.
 
-## Installation from the repository
- You can have access to SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+## Installation 
+
+### Git clone
+You can have access to SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+
 ```
 git clone https://github.com/ratt-ru/solarkat.git
+
 ```
+
+### Intallation using pip 
+
+SolarKAT can be installed using pip: 
+
+```
+pip install solarkat
+
+```
+
 ## Running SolarKAT 
 
-Before running SolarKAT, activate the Stimela virtual environment. Then run:
+Before running SolarKAT, create and activate the Stimela virtual environment. 
+
+```
+$: virtualenv -p python3 stimela_env
+source stimela-env/bin/activate
+```
+Then run:
 ```
 stimela run recipe.yml [recipe_name] obs=obs
 ```
@@ -160,14 +180,19 @@ More details can be found in the Documentation here https://solarkat-docs.readth
 ## Citing this Pipeline
 
 We kindly request that any work using this pipeline cites the following reference:
-
+```
 @article{samboco2024solarkat,
-
     author = {Samboco, Victória G. and  Heywood, Ian and Smirnov, Oleg},
     title = {SolarKAT: A Solar Imaging Pipeline for MeerKAT},
     journal = {Astrophysics Source Code Library},
-    pages={ascl ID},
+    pages={ascl:2401.013},
+    month={January},
     year = {2024}
     }
-
+```
 Thank you for considering our request.
+
+
+## Note
+
+This package is in public Beta stage. SolarKAT is feature-complete, has undergone testing on multiple datasets, and is suitable for broader use. While efforts have been made to ensure stability, there may still be some undiscovered issues. Users are encouraged to use it, provide feedback, and report any issues on the project's GitHub page (https://github.com/ratt-ru/solarkat).

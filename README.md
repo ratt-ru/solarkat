@@ -1,8 +1,8 @@
 # SolarKAT
-MeerKAT as a solar telescope.  
 
-Radio frequency interference is a growing problem in radio astronomy, especially for new-generation telescopes such as MeerKAT. Its wide field of view and high sensitivity make the MeerKAT telescope capable of capturing the Sun even when looking far away from it (close to 90 degrees). This ability facilitates also contamination from the out-of-field Sun, causing, in some conditions, data corruption (which we call solar radio interference). To address this issue we present the SolarKAT pipeline. SolarKAT is a solar imaging pipeline that aims to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
+SolarKAT is a solar imaging pipeline developed to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
 
+Radio frequency interference is a growing problem in radio astronomy, especially for new-generation telescopes such as MeerKAT. Its wide field of view and high sensitivity make the MeerKAT telescope capable of capturing the Sun even when looking far away from it. This ability facilitates contamination from the out-of-field Sun, causing, in some conditions, data corruption.
 
 ## Installation 
 
@@ -11,9 +11,10 @@ You can have access to SolarKAT by cloning it from the repository to your local 
 
 ```
 git clone https://github.com/ratt-ru/solarkat.git
+
 ```
 
-### pip intallation
+### Intallation using pip 
 
 SolarKAT can be installed using pip: 
 
@@ -21,7 +22,6 @@ SolarKAT can be installed using pip:
 pip install solarkat
 
 ```
-
 
 ## Running SolarKAT 
 
@@ -57,3 +57,8 @@ We kindly request that any work using this pipeline cites the following referenc
     }
 ```
 Thank you for considering our request.
+
+
+## Note
+
+This package is in public Beta stage. SolarKAT is feature-complete, has undergone testing on multiple datasets, and is suitable for broader use. While efforts have been made to ensure stability, there may still be some undiscovered issues. Users are encouraged to use it, provide feedback, and report any issues on the project's GitHub page (https://github.com/ratt-ru/solarkat).
