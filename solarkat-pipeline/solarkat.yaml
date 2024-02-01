@@ -335,41 +335,7 @@ solarkat:
         size: [8000, 8000]
         column: CORRECTED_DATA
         temp_dir: '{root.dir_out}/tmp'
-        fits-mask: "{steps.image-3.prefix}-mask.fits"
-
-        
-    # selfcal_2:
-    #   cab: quartical
-    #   info: "Self calibration"
-    #   params:
-    #     input_ms.path: '{recipe.ms}'
-    #     input_ms.time_chunk: '14'
-    #     input_model.recipe: MODEL_DATA
-    #     solver.terms: [K]        
-    #     solver.iter_recipe: [100]
-    #     K.type: phase
-    #     K.freq_interval: '0'
-    #     K.time_interval: '4' 
-    #     K.initial_estimate: true
-    #     K.direction_dependent: false
-    #     output.overwrite: true
-    #     output.products: [corrected_data]
-    #     output.columns: [CORRECTED_DATA]
-
-    # image-5a: 
-    #   info: "Breizorro-masked deep I clean"
-    #   _use: lib.steps.wsclean.image
-    #   skip: true
-    #   params:        
-    #     padding: 2
-    #     niter: 100000
-    #     size: [6000, 6000]  
-    #     column: CORRECTED_DATA
-    #     temp_dir: '{root.dir_out}/tmp'
-    #     fits-mask: "{steps.image-4.prefix}-mask.fits"
-    #     auto-threshold: =UNSET
- 
-         
+        fits-mask: "{steps.image-3.prefix}-mask.fits"      
 
     backup_model_data:
       cab: rename_model_data
@@ -699,8 +665,7 @@ solarkat:
         size:  [8000, 8000]
         temp_dir: '{root.dir_out}/tmp'
 
-        #From here we have the improved MODEL_DATA of, without the Sun (which will be used in the peeling step with the MODEL_DATA_SUN column) 
-
+      #From here we have the improved MODEL_DATA of, without the Sun (which will be used in the peeling step with the MODEL_DATA_SUN column) 
 
     image-6b:
       info: "quality_control: Image the model of the Sun"
