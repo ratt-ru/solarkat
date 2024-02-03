@@ -38,13 +38,18 @@ More details can be found in the Documentation here https://solarkat-docs.readth
 
 We kindly request that any work using this pipeline cites the following reference:
 ```
-@article{samboco2024solarkat,
+@MISC{samboco2024solarkat,
     author = {Samboco, Victória G. and  Heywood, Ian and Smirnov, Oleg},
     title = {SolarKAT: Solar Imaging Pipeline for MeerKAT},
-    journal = {Astrophysics Source Code Library},
-    pages={ascl:2401.013},
+    keywords={Software},
+    howpublished = {Astrophysics Source Code Library, record ascl:2401.013},
+    eid = {ascl:2401.013}
+    pages = {ascl:2401.013},
+    archivePrefix = {ascl},
+    eprint = {2401.013},
     month={January},
-    year = {2024}
+    year = {2024},
+    adsurl = {https://ui.adsabs.harvard.edu/abs/2024ascl.soft01013S}
     }
 ```
 Thank you for considering our request.
