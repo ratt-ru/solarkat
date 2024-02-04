@@ -433,7 +433,7 @@ solarkat:
       info: 'Create ds9 regions for each'
       params:
         ms: '{recipe.ms}'
-        input_file: '{recipe.steps.get_sun_coordinates.outfile}'
+        input_file: '{recipe.steps.get_sun_coordinates.output_file}'
         output_dir: '{recipe.dir_out}/{recipe.regions_dir_out}' 
 
 
