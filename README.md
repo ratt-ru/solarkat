@@ -7,7 +7,7 @@ Radio frequency interference is a growing problem in radio astronomy, especially
 ## Installation 
 
 ### Git clone
-You can have access to SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+You can access SolarKAT by cloning it from the repository to your local computer. To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
 
 ```
 git clone https://github.com/ratt-ru/solarkat.git
@@ -31,7 +31,7 @@ Example:
 stimela run solarkat.yaml solarkat obs=L1
 ```
 
-More details can be found in the Documentation here https://solarkat-docs.readthedocs.io/en/latest/index.html.
+More details can be found in the Documentation here: https://solarkat-docs.readthedocs.io/en/latest/index.html.
 
 
 ## Citing this Pipeline
@@ -52,9 +52,9 @@ We kindly request that any work using this pipeline cites the following referenc
     adsurl = {https://ui.adsabs.harvard.edu/abs/2024ascl.soft01013S}
     }
 ```
-Thank you for considering our request.
+Thank you very much for considering our request.
 
 
 ## Note
 
-This package is in public Beta stage. SolarKAT is feature-complete, has undergone testing on multiple datasets, and is suitable for broader use. While efforts have been made to ensure stability, there may still be some undiscovered issues. Users are encouraged to use it, provide feedback, and report any issues on the project's GitHub page (https://github.com/ratt-ru/solarkat).
+This package is in the public Beta stage. SolarKAT is feature-complete, has undergone testing on multiple datasets, and is suitable for broader use. While efforts have been made to ensure stability, there may still be some issues that need to be addressed. Users are encouraged to use it, provide feedback, and report any issues on the project's GitHub page (https://github.com/ratt-ru/solarkat).
