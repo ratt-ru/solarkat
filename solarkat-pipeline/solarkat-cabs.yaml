@@ -1,12 +1,30 @@
-_include:
-   - (quartical)stimela_cabs.yaml
+_include:  
 
+  (cultcargo):
+    - wsclean.yml
+    - casa-flag.yml
+    - breizorro.yml
+    - cubical.yml
+    - crystalball.yml
+    - smops.yml
+    - taql.yml
+    - msutils.yml
+    - fitstool.yml
+    - bdsf.yml
+    - tigger.yml
+    - tricolour.yml
+ 
+  (quartical):
+    - stimela_cabs.yaml
+
+ 
 # This augments the standard 'cabs' config section
 
 cabs:
   wsclean:
     image: ''
-    command: wsclean
+    command: /home/samboco/solarKAT/Git_clone/wsclean/build/wsclean
+    
 
   mkdir:
     command: mkdir
@@ -53,13 +71,12 @@ cabs:
         dtype: MS
         required: true
         default: '{recipe.ms}'
-      name:
+      versionname:
         info: "flag version name"
         required: true
       mode: 
         choices: [save, restore]
         default: restore
-
 
 
   rename_model_data:
@@ -125,7 +142,6 @@ cabs:
         required: true
 
 
-
   get_old_coords:
     command: solarkat.get_old_coords
     flavour: python
@@ -136,7 +152,6 @@ cabs:
     outputs:
       output_file:
         dtype: File
-
 
 
   sun_coordinates:
@@ -162,7 +177,8 @@ cabs:
         required: true
       splitted_ms_dir:
         dtype: Directory
-
+      datacolumn:
+        dtype: str
 
 
 
@@ -181,7 +197,6 @@ cabs:
         required: true
     
 
-
   add_model_data_column:
     command: solarkat.add_column_to_ms
     flavour: python
@@ -197,9 +212,8 @@ cabs:
         required: true
 
 
-
   copy_model_data_to_model_data_sun:
-    command: solarkat.copy_model_data_to_model_data_sun #opy_model_data #copy_column_to_target
+    command: solarkat.copy_model_data_to_model_data_sun 
     info: 'copying a column from a list of MS to a single ms'
     flavour: python
     inputs:
@@ -213,85 +227,6 @@ cabs:
         dtype: str
 
 
-
-  taql_update:
-    command: "taql update"
-    policies:
-      positional: true
-    inputs:
-      ms:
-        dtype: MS
-        required: true
-      commands:
-        dtype: List[str]
-        policies:
-          repeat: list
-
-
-  crystalball:
-    command: crystalball
-    virtual_env: /home/samboco/Virtual_enviroments/cball_env 
-    policies:
-      prefix: '--'
-      replace: {'_': '-'}
-    inputs:
-      ms:
-        dtype: MS
-        writable: true
-        required: true
-        policies:
-          positional: true
-      output_column:
-        dtype: str
-        required: true
-      sky_model:
-        dtype: File
-        required: true
-      within:
-        dtype: File
-      num_sources:
-        dtype: int
-
-
-  breizorro:
-    command: breizorro
-    policies:
-      replace: {'_': '-'}
-    inputs:
-      restored_image:
-        dtype: File
-      mask_image:
-        dtype: File
-      merge:
-        dtype: Union[str, List[str]]
-      subtract:
-        dtype: Union[str, List[str]]
-      threshold:
-        dtype: float
-        default: 6.5
-      dilate:
-        dtype: int
-      number_islands:
-        dtype: bool
-      extract_islands:
-        dtype: List[str]
-        policies:
-          repeat: list
-      remove_islands:
-        dtype: List[str]
-        policies:
-          repeat: list
-      invert:
-        dtype: bool
-      make_binary:
-        dtype: bool
-    outputs:
-      mask:
-        dtype: File
-        nom_de_guerre: outfile
-        required: true 
-
-
 lib:
   steps:
     wsclean:
@@ -302,15 +237,14 @@ lib:
           scale: 1.5asec
           size: [16000, 32000]
           padding: 1.5
-          nwlayers_factor: 3
+          nwlayers-factor: 3.0
           nchan: 8
           temp_dir: /home/samboco/solarkat/SUN_IMAGING_STEPS/temp_dir
           use-wgridder: true
           log-time: true
           ms: '{recipe.ms}'
           auto-threshold: 3
-          prefix: '{recipe.image-prefix}'  
-        
+          prefix: '{recipe.image-prefix}' 
 
       dirty:
         _use: lib.steps.wsclean.base
@@ -320,14 +254,12 @@ lib:
           weight: 'briggs 0'
           niter: 0
 
-
       dirty_pol:
         _use: lib.steps.wsclean.dirty
         info: "wsclean step for dirty-only IQUV image"
         cab: wsclean_pol
         params:
           pol: IQUV
-
 
       image:
         _use: lib.steps.wsclean.dirty
@@ -337,78 +269,44 @@ lib:
           mgain: 0.8 #0.9
           weight: 'briggs 0'
           niter: 100000
-          join_channels: true
-          fit_spectral_pol: 4
-          
+          join-channels: true
+          fit-spectral-pol: 4
 
-      image_pol:
-        _use: lib.steps.wsclean.image
-        info: "wsclean step for IQUV imaging"
-        cab: wsclean_pol
-        params:
-          join-polarizations: true
-          pol: IQUV
-
-      changecentre: 
+      chgcentre: 
         _use: lib.steps.wsclean.base
         params:
           chgcentre: true
-
-
-      image_pol2:
-        _use: lib.steps.wsclean.image_pol
-        info: "wsclean step for IQ imaging"
-        params:
-          pol: IQ
-
 
       predict:
         _use: lib.steps.wsclean.base
         info: "wsclean step for predicting a model"
         params:
           predict: true
-
-
-      predict_pol:
-        _use: lib.steps.wsclean.predict
-        info: "wsclean step for predicting an IQUV model"
-        cab: wsclean_pol
-        params:
-          predict: true
-          pol: IQUV
-
-
-      predict_pol2:
-        _use: lib.steps.wsclean.predict_pol
-        info: "wsclean step for predicting an IQ model"
-        params:
-          pol: IQUV
-
+          
 
     quartical:
-      base:
-        cab: quartical
-        params:
-          input_ms.time_chunk: '16'
-          input_ms.freq_chunk: '0'
-          input_ms.group_by: [SCAN_NUMBER,FIELD_ID,DATA_DESC_ID]
-          input_ms.select_uv_range: [0, 0]
-          input_ms.select_corr: [0, 3]
-          input_model.apply_p_jones: false
-          solver.terms: [K]
-          solver.iter_recipe: [25]
-          solver.propagate_flags: true
-          solver.robust: false
-          output.overwrite: true
-          output.products: [corrected_data]
-          output.columns: [CORRECTED_DATA]
-          output.flags: true
-          output.apply_p_jones_inv: false
-          output.net_gain: false
-          mad_flags.enable: true
-          mad_flags.threshold_bl: 5
-          mad_flags.threshold_global: 5
-          mad_flags.max_deviation: 5
-          K.time_interval: 1
-          K.freq_interval: 0
-          K.type: delay
+      cab: quartical
+      params:
+        input_ms.time_chunk: '16'
+        input_ms.freq_chunk: '0'
+        input_ms.group_by: [SCAN_NUMBER,FIELD_ID,DATA_DESC_ID]
+        input_ms.select_uv_range: [0, 0]
+        input_ms.select_corr: [0, 3]
+        input_model.apply_p_jones: false
+        solver.terms: [K]
+        solver.iter_recipe: [25]
+        solver.propagate_flags: true
+        solver.robust: false
+        output.overwrite: true
+        output.products: [corrected_data]
+        output.columns: [CORRECTED_DATA]
+        output.flags: true
+        output.apply_p_jones_inv: false
+        output.net_gain: false
+        mad_flags.enable: true
+        mad_flags.threshold_bl: 5
+        mad_flags.threshold_global: 5
+        mad_flags.max_deviation: 5
+        K.time_interval: 1
+        K.freq_interval: 0
+        K.type: delay
