@@ -13,18 +13,13 @@ _include:
     - bdsf.yml
     - tigger.yml
     - tricolour.yml
+    - crystalball.yml
+    - quartical.yml
  
-  (quartical):
-    - stimela_cabs.yaml
-
  
 # This augments the standard 'cabs' config section
 
 cabs:
-  wsclean:
-    image: ''
-    command: /home/samboco/solarKAT/Git_clone/wsclean/build/wsclean
-    
 
   mkdir:
     command: mkdir
@@ -62,23 +57,6 @@ cabs:
         required: true
 
 
-  flagman:
-    command: casa --nogui --log2term -c 'flagmanager(vis="{current.ms}", mode="{current.mode}", versionname="{current.name}")'
-    policies:
-      skip: true
-    inputs:
-      ms: 
-        dtype: MS
-        required: true
-        default: '{recipe.ms}'
-      versionname:
-        info: "flag version name"
-        required: true
-      mode: 
-        choices: [save, restore]
-        default: restore
-
-
   rename_model_data:
     command: solarkat.rename_model_data_column
     flavour: python
@@ -90,8 +68,7 @@ cabs:
         dtype: str
       newname: 
         dtype: str
-
-
+        
 
   extract_and_save_scan_numbers: 
     info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'      
@@ -180,8 +157,6 @@ cabs:
       datacolumn:
         dtype: str
 
-
-
   create_ds9_regions:
     command: solarkat.create_ds9_region_from_file
     flavour: python
@@ -239,7 +214,6 @@ lib:
           padding: 1.5
           nwlayers-factor: 3.0
           nchan: 8
-          temp_dir: /home/samboco/solarkat/SUN_IMAGING_STEPS/temp_dir
           use-wgridder: true
           log-time: true
           ms: '{recipe.ms}'
@@ -270,7 +244,7 @@ lib:
           weight: 'briggs 0'
           niter: 100000
           join-channels: true
-          fit-spectral-pol: 4
+          fit-spectral-pol: 4        
 
       chgcentre: 
         _use: lib.steps.wsclean.base
@@ -282,7 +256,7 @@ lib:
         info: "wsclean step for predicting a model"
         params:
           predict: true
-          
+
 
     quartical:
       cab: quartical
