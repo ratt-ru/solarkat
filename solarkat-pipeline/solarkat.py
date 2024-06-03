@@ -7,7 +7,6 @@ import numpy as np
 from astropy.time import Time
 from pyrap.tables import table
 from astropy import units as u
-from casacore.tables import table
 from  MSUtils.msutils import addcol
 from astropy.coordinates import Angle
 from astropy.coordinates import SkyCoord
@@ -51,7 +50,9 @@ def extract_and_save_scan_numbers(ms, output_file):
     Returns:
     List[str]: List of unique scan numbers as strings
     '''
-    print(f"Extracting scan numbers from {ms}...")
+    print("Extracting scan numbers from {}...".format(ms))
+
+    #print(f"Extracting scan numbers from {ms} ...")
     
     scans = []
     
@@ -66,7 +67,7 @@ def extract_and_save_scan_numbers(ms, output_file):
     with open(output_file, 'w') as file:
         file.write('\n'.join(scans))
 
-    print(f"Scan numbers saved to {output_file}")
+    print("Scan numbers saved to {}...".format(output_file))
     
     return scans
 
@@ -82,12 +83,14 @@ def rename_model_data_column(ms, oldname, newname):
     oldname (str): Name of the column to be renamed.
     newname (str): New name for the column.
     '''
-    print(f"Processing {ms}...")
+    print("Processing {}...".format(ms))
     # open the MS table in read-write mode
     ms = table(ms, readonly=False)
     # rename the 'MODEL_DATA' column to 'MODEL_DATA_ORIGINAL'
     ms.renamecol(oldname, newname)
-    print(f"Column '{oldname}' renamed to '{newname}' in {ms}.")
+    #print(f"Column '{oldname}' renamed to '{newname}' in {ms}.")
+    print("Column '{}' renamed to '{}' in {}.".format(oldname, newname, ms))
+
     # close the MS table
     ms.close()
 
@@ -99,7 +102,7 @@ def rename_columns(ms_list, oldname, newname):
     '''
     for ms_name in ms_list:
 
-        print(f"Renaming column '{oldname}' to '{newname}' in {ms_name}...")
+        print("Renaming column '{}' to '{}' in {}...".format(oldname, newname, ms_name))
 
         '''
         Open the MS table in read-write mode
@@ -111,7 +114,7 @@ def rename_columns(ms_list, oldname, newname):
             ms.renamecol('oldname', 'newname')
         # close the MS table
         ms.close()
-        print(f"Renaming completed for {ms_name}.")
+        print("Renaming completed for {}.".format(ms_name))
     print("Rename column completed successfully.")
 
 #________________________________________________________________________________________________________________________________________________________
@@ -132,9 +135,9 @@ def get_old_coords(ms_list, output_file):
     old_coords = []
     for ms in sorted_ms_list:
 
-        print(f"Processing {ms}...")
+        print("Processing {}...".format(ms))
         # 1. Read the PHASE_DIR column, the values in radians
-        field_dir = table(f"{ms}::FIELD", readonly=True)
+        field_dir = table("{}::FIELD".format(ms), readonly=True)
         phase_dir = field_dir.getcol("PHASE_DIR")
 
         # Extract the RA and Dec values from the PHASE_DIR column
@@ -149,9 +152,9 @@ def get_old_coords(ms_list, output_file):
 
         # format dec to dms
         dec_dms = sk.dec.to_string(unit=u.degree, pad=True, alwayssign= True)#,precision=1)
-        old_coords.append(f"{ra_hms} {dec_dms}")
+        old_coords.append("{} {}".format(ra_hms, dec_dms))
         field_dir.close()
-        print(f"Processing of {ms} complete.")
+        print("Processing of {} complete.".format(ms))
 
     with open(output_file,'wt') as f:
         for old_coord in old_coords:
@@ -175,8 +178,13 @@ def get_sun_coordinates(ms, output_file):
     '''
     def format_coords(ra0,dec0):
         c = SkyCoord(ra0*u.deg,dec0*u.deg,frame='fk5')
-        hms = str(c.ra.to_string(u.hour))
-        dms = str(c.dec)
+        #hms = c.ra.to_string(u.hour, precision=1, pad=True)
+        # Format Dec without decimal seconds
+        #dms = c.dec.to_string(u.deg, precision=1, pad=True) 
+        #return hms, dms
+        hms = str(c.ra.to_string(u.hour, precision=1))
+        dms = str(c.dec.to_string(u.deg, precision=1))
+        #dms = str(c.dec)
         return hms,dms
 
     # MeerKAT
@@ -188,7 +196,7 @@ def get_sun_coordinates(ms, output_file):
     scans = list(numpy.unique(maintab.getcol('SCAN_NUMBER')))
     lines = []
 
-    print(f"Extracting Sun coordinates from {ms}...")
+    print("Extracting Sun coordinates from {}...".format(ms))
     for scan in scans:
         subtab = maintab.query(query='SCAN_NUMBER==' + str(scan))
         t_scan = numpy.mean(subtab.getcol('TIME'))
@@ -199,7 +207,7 @@ def get_sun_coordinates(ms, output_file):
             sun_ra = sun.ra.value
             sun_dec = sun.dec.value
             sun_hms, sun_dms = format_coords(sun_ra, sun_dec)
-            lines.append(f"{sun_hms} {sun_dms}")
+            lines.append("{} {}".format(sun_hms, sun_dms))
 
     maintab.close()
 
@@ -207,13 +215,12 @@ def get_sun_coordinates(ms, output_file):
         for line in lines:
             f.write(line + '\n')
 
-    print(f"Sun coordinates extracted and saved to {output_file}.")
+    print("Sun coordinates extracted and saved to {}.".format(output_file))
 
 
 #________________________________________________________________________________________________________________________________________________________
 
-
-def shift_coordinates(ms_list, coords, splitted_ms_dir):
+def shift_coordinates(ms_list, coords, splitted_ms_dir, datacolumn='all'):
     '''
     A funtion that takes a list of scans and coordinates shift/rephase it for a specific colunm (CORRECTED_DATA) and iutput in the splitted_ms_dir directory 
     Parameters:
@@ -222,21 +229,26 @@ def shift_coordinates(ms_list, coords, splitted_ms_dir):
     splitted_ms_dir (Directory): Path to the scans directory
     datacolumn (str): Datacolumn to use (when not defined default is 'all').
     '''
-    with open(coords) as f:
-        lines = f.readlines()
-        num_lines = len(lines)
+    coordinates = []
+    with open(coords, 'r') as file:
+        for line in file:
+            ra, dec = line.strip().split() # Assuming RA and Dec are separated by a space
+            coordinates.append((ra,dec))
 
     #Sort the ms_list in numerical order
     sorted_ms_list = sorted(ms_list, key=lambda x: int(x.split('_scan_')[1].split('.')[0]))
+    print(sorted_ms_list)
+    chgcentre_path= '/home/samboco/solarKAT/Git_clone/wsclean/build/chgcentre'
 
-    for i, ms in enumerate(sorted_ms_list):
-        splitted_ms = os.path.join(splitted_ms_dir, os.path.basename(ms).replace(".ms", ".ms"))
-        line = lines[i % num_lines].strip()
-        print(f"Changing phase centre coordinates for {ms}...")
-        os.system(f"chgcentre {ms} {line} {splitted_ms}")
-        print(f'Scan {ms} Done.')
-    print("Phase center changed successfully.")
-
+    for ms, (ra, dec) in zip(sorted_ms_list, coordinates):
+        #for ms in sorted_ms_list:
+        command=[chgcentre_path, ms, ra, dec]
+        try:
+            subprocess.run(command, check=True)
+            print("Successfully processed RA: {}, Dec:{} for MS: {}".format(ra, dec, ms))
+        except subprocess.CalledProcessError as e:
+            print("Error processing RA: {}, Dec: {} for MS: {}".format(ra, dec, ms))
+            print("Error message: {}".format(e))
 
 #________________________________________________________________________________________________________________________________________________________
 
@@ -255,27 +267,27 @@ def create_ds9_region_from_file(input_file, output_dir, ms):
         for i, line in enumerate(f):
             ra, dec = map(str.strip, line.split())
             print('RA in hms format:', ra, 'DEC in dms format:', dec, output_dir)
-            print(f'Processing coordinates for scan {scan_numbers[i]}...')
+            print('Processing coordinates for scan {}...'.format(scan_numbers[i]))
 
             ra_deg = hms2deg(ra)
             dec_deg = dms2deg(dec)
             print('RA in degrees:', ra_deg, 'DEC in degrees:', dec_deg)
-            print(f'Creating DS9 region for scan {scan_numbers[i]}...')
+            print('Creating DS9 region for scan {}...'.format(scan_numbers[i]))
 
             scan_number = scan_numbers[i]  # Use the scan number at the corresponding index
-            print(f"Creating region for scan {scan_number}"  '..................................................................................')
+            print("Creating region for scan {} ............................................".format(scan_number))
             create_ds9_region(ra_deg, dec_deg, scan_number, output_dir)
     print("DS9 region creation completed successfully.")
 
 def create_ds9_region(ra, dec, scan_number, output_dir):
     # Function to create a DS99 region file
-    sun_region = f'''# Region file format: DS9 CARTA 3.0.0-beta.3 
+    sun_region = f"""# Region file format: DS9 CARTA 3.0.0-beta.3 
 global color=green dashlist=8 3 width=3 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
 fk5
 circle({ra}, {dec}, 1188.0000") # color=green
-'''
+"""
 #The UHF band images of the sun has a radius of 1062.9118 and the L bands 1188.0000"
-    with open(f'{output_dir}/sun_region_{scan_number}.reg', 'w') as f:
+    with open("{}/sun_region_{}.reg".format(output_dir, scan_number), 'w') as f:
         f.write(sun_region)
 
 #_____________________________________________________________________________________________________________________________________________________
@@ -287,10 +299,10 @@ def add_column_to_ms(ms, col_names, like_col):
     """
     success = False
     try:
-        print(f"Opening {ms}...")
+        print("Opening {}...".format(ms))
         tb = table(ms, readonly=False)
     except Exception as e:
-        print(f"Error: {e}")
+        print("Error: {}".format(e))
         return success
     
     for col_name in col_names:
@@ -303,10 +315,10 @@ def add_column_to_ms(ms, col_names, like_col):
             desc[str('comment')] = str(desc['comment'].replace(" ", "_"))
             dminfo = tb.getdminfo(like_col)
             dminfo[str("NAME")] = "{}-{}".format(dminfo["NAME"], col_name) 
-            print(f"Adding column '{col_name}' to {ms}...")       
+            print("Adding column '{}' to {}...".format(col_name, ms))       
             tb.addcols(desc, dminfo)
             success = True
-    print(f"Columns added to {ms} successfully.")
+    print("Columns added to {} successfully.".format(ms))
     tb.close()
     return success
 
@@ -317,7 +329,7 @@ def add_column_to_ms(ms, col_names, like_col):
 #Copying Model data into the model-data-sun in the  ooriginal MS
 
 def copy_model_data_to_model_data_sun(ms, ms_list, copycol, tocol):
-    print(f"Copying {copycol} to {tocol} in {ms}...")
+    print("Copying {} to {} in {}...".format(copycol, tocol, ms))
 
     # Open the main MS table as maintab
     maintab = table(ms, readonly=False)
@@ -364,13 +376,12 @@ def copy_model_data_to_model_data_sun(ms, ms_list, copycol, tocol):
 
             # Close the source_subtab
             source_subtab.close()
-            print(f"Copy completed for scan {scan_number}.")
+            print("Copy completed for scan {}.".format(scan_number))
 
     # Close the maintab
     maintab.close()
 
-    print(f"Copying {copycol} to {tocol} in {ms} completed successfully.")
+    print("Copying {} to {} in {} completed successfully.".format(copycol, tocol, ms))
 
 
 #________________________________________________________________________________________________________________________________________________________
-
