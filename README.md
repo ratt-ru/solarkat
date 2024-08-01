@@ -43,7 +43,7 @@ We kindly request that any work using this pipeline cites the following referenc
     title = {SolarKAT: Solar Imaging Pipeline for MeerKAT},
     keywords={Software},
     howpublished = {Astrophysics Source Code Library, record ascl:2401.013},
-    eid = {ascl:2401.013}
+    eid = {ascl:2401.013},
     pages = {ascl:2401.013},
     archivePrefix = {ascl},
     eprint = {2401.013},
