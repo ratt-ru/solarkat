@@ -453,7 +453,7 @@ solarkat:
               size:  8000 
               niter: 100000
               multiscale: true
-              threshold: 3.55e-4 
+              threshold: 3.55e-4 #This is selected according to each dataset
               join-channels: true
               fit-spectral-pol: 4
               auto-threshold: =UNSET  
