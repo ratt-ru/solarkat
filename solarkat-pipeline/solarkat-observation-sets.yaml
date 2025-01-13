@@ -1,0 +1,34 @@
+obs:
+  L1:
+    ms: /home/samboco/solarKAT/SUN_IMAGING_STEPS/pipeline/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms #/users/vicky/workspace/solarkat/msdir/1671435077_sdp_l0_1024ch_GRS1747-312.ms
+    dir_out: obs1
+    perscan_dir_out: "ms_scans"
+    sun_images_dir: "sun_images"
+    regions_dir_out: "region_files"
+    masks_dir_out: "sun_masks"
+    clean_image_sun: "deconvolved_sun_img"
+    qcal_output_dir: "peeled.qc"
+    band: L
+
+  L2:
+    ms: l_band_observation.ms
+    dir_out: obs2
+    perscan_dir_out: "ms_scans"
+    sun_images_dir: "sun_images"
+    regions_dir_out: "region_files"
+    masks_dir_out: "sun_masks"
+    clean_image_sun: "deconvolved_sun_img"
+    qcal_output_dir: "peeled.qc"
+    band: L
+
+
+  UHF:
+    ms: uhf_observation.ms
+    dir_out: obs3
+    perscan_dir_out: "ms_scans"
+    sun_images_dir: "sun_images"
+    regions_dir_out: "region_files"
+    masks_dir_out: "sun_masks"
+    clean_image_sun: "deconvolved_sun_img"
+    qcal_output_dir: "peeled.qc"
+    band: UHF

@@ -74,8 +74,8 @@ def extract_and_save_scan_numbers(ms, output_file):
 
 #________________________________________________________________________________________________________________________________________________________
 
-def rename_model_data_column(ms, oldname, newname):
-    
+def rename_model_data_column1(ms, oldname, newname):
+
     '''
     Rename the 'MODEL_DATA' column to 'MODEL_DATA_ORIGINAL' in a Measurement Set (MS) table.
     Parameters:
@@ -93,6 +93,35 @@ def rename_model_data_column(ms, oldname, newname):
 
     # close the MS table
     ms.close()
+
+
+def rename_model_data_column(ms, oldname, newname):
+    """
+    Rename the 'MODEL_DATA' column to 'MODEL_DATA_ORIGINAL' in a Measurement Set (MS) table.
+    If 'MODEL_DATA_ORIGINAL' already exists, it will be removed and replaced.
+    Parameters:
+    ms (str): Path to the Measurement Set file.
+    oldname (str): Name of the column to be renamed.
+    newname (str): New name for the column.
+    """
+    print(f"Processing: {ms}...")
+
+    try:
+        # Open the MS table in read-write mode
+        with table(ms, readonly=False) as ms:
+            # Check if the new column already exists
+            if newname in ms.colnames():
+                print(f"Column '{newname}' already exists. Removing it before renaming.")
+                ms.removecols(newname)  # Remove the existing column
+            # Check if the old column exists
+            if oldname not in ms.colnames():
+                print(f"Column '{oldname}' does not exist. Rename aborted.")
+                return
+            # Rename the column
+            ms.renamecol(oldname, newname)
+            print(f"Successfully renamed column '{oldname}' to '{newname}' in {ms}.")
+    except Exception as e:
+        print(f"An error occurred while processing {ms}: {e}")
 
 ##########################################################################################################################################################
 
@@ -287,13 +316,13 @@ fk5
 circle({ra}, {dec}, 1188.0000") # color=green
 """
 #The UHF band images of the sun has a radius of 1062.9118 and the L bands 1188.0000"
-    with open("{}/sun_region_{}.reg".format(output_dir, scan_number), 'w') as f:
+    with open("{}/sun-region-{}.reg".format(output_dir, scan_number), 'w') as f:
         f.write(sun_region)
 
 #_____________________________________________________________________________________________________________________________________________________
 
 
-def add_column_to_ms(ms, col_names, like_col):
+def add_column_to_ms(ms, colnames, likecol):
     """
     Add columns to a single measurement file
     """
@@ -305,17 +334,17 @@ def add_column_to_ms(ms, col_names, like_col):
         print("Error: {}".format(e))
         return success
     
-    for col_name in col_names:
-        if col_name not in tb.colnames():
+    for colname in colnames:
+        if colname not in tb.colnames():
             """
             Get column description from column 'like_col'
             """
-            desc = tb.getcoldesc(like_col)
-            desc[str('name')] = str(col_name)
+            desc = tb.getcoldesc(likecol)
+            desc[str('name')] = str(colname)
             desc[str('comment')] = str(desc['comment'].replace(" ", "_"))
-            dminfo = tb.getdminfo(like_col)
-            dminfo[str("NAME")] = "{}-{}".format(dminfo["NAME"], col_name) 
-            print("Adding column '{}' to {}...".format(col_name, ms))       
+            dminfo = tb.getdminfo(likecol)
+            dminfo[str("NAME")] = "{}-{}".format(dminfo["NAME"], colname) 
+            print("Adding column '{}' to {}...".format(colname, ms))       
             tb.addcols(desc, dminfo)
             success = True
     print("Columns added to {} successfully.".format(ms))
@@ -385,3 +414,4 @@ def copy_model_data_to_model_data_sun(ms, ms_list, copycol, tocol):
 
 
 #________________________________________________________________________________________________________________________________________________________
+

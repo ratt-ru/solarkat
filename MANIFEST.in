@@ -1,2 +1,2 @@
-include solarkat_pipeline/*
+include recipes/*
 include README.md

@@ -1,77 +1,31 @@
-_include:  
 
+_include:
   (cultcargo):
-    - wsclean.yml
     - casa-flag.yml
     - breizorro.yml
-    - cubical.yml
     - crystalball.yml
-    - smops.yml
-    - taql.yml
     - msutils.yml
     - fitstool.yml
     - bdsf.yml
-    - tigger.yml
-    - tricolour.yml
-    - crystalball.yml
+    - wsclean.yml
     - quartical.yml
- 
- 
-# This augments the standard 'cabs' config section
+
 
 cabs:
-
-  mkdir:
-    command: mkdir
-    inputs:
-        dtype: str
-        policies:
-          positional: true
-
-
-  mv:
-    command: mv
-    policies:
-      positional: true
-    inputs:
-      src:
-        dtype: File
-        required: true
-    outputs:  
-      dest:
-          dtype: Union[File, Directory]
-          required: true
-
-
-  cp:
-    command: cp -a
-    policies:
-      positional: true
-    inputs:
-      src:
-        dtype: File
-        required: true
-    outputs:
-      dest:
-        dtype: Union[File, Directory]
-        required: true
-
-
   rename_model_data:
     command: solarkat.rename_model_data_column
     flavour: python
-    inputs: 
+    inputs:
       ms:
         dtype: MS
         required: true
       oldname:
         dtype: str
-      newname: 
+      newname:
         dtype: str
-        
 
-  extract_and_save_scan_numbers: 
-    info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a list of strings representing the unique scan numbers.'      
+  extract_and_save_scan_numbers:
+    info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a>'
     command: solarkat.extract_and_save_scan_numbers
     flavour: python
     inputs:
@@ -102,7 +56,7 @@ cabs:
     command: split
     flavour: casa-task
     inputs:
-      vis: 
+      vis:
         dtype: MS
         required: true
         default: '{recipe.ms}'
@@ -111,8 +65,8 @@ cabs:
         info: "scan number range"
         default: 'all'
       datacolumn:
-        dtype: str 
-        default: 'all' 
+        dtype: str
+        default: 'all'
       outputvis:
         dtype: str
         default: '{recipe.ms}-output'
@@ -142,7 +96,6 @@ cabs:
       output_file:
         dtype: File
 
-
   shift_coords:
     command: solarkat.shift_coordinates
     flavour: python
@@ -160,7 +113,7 @@ cabs:
   create_ds9_regions:
     command: solarkat.create_ds9_region_from_file
     flavour: python
-    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
+    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates fil>'
     inputs:
       input_file:
         dtype: File
@@ -170,7 +123,6 @@ cabs:
       ms:
         dtype: MS
         required: true
-    
 
   add_model_data_column:
     command: solarkat.add_column_to_ms
@@ -179,10 +131,10 @@ cabs:
       ms:
         dtype: MS
         required: true
-      col_names:
+      colnames:
         dtype: List[str]
         required: true
-      like_col:
+      likecol:
         dtype: str
         required: true
 
@@ -202,85 +154,6 @@ cabs:
         dtype: str
 
 
-lib:
-  steps:
-    wsclean:
-      base:
-        info: "base wsclean settings"
-        cab: wsclean
-        params:
-          scale: 1.5asec
-          size: [16000, 32000]
-          padding: 1.5
-          nwlayers-factor: 3.0
-          nchan: 8
-          use-wgridder: true
-          log-time: true
-          ms: '{recipe.ms}'
-          auto-threshold: 3
-          prefix: '{recipe.image-prefix}' 
-
-      dirty:
-        _use: lib.steps.wsclean.base
-        info: "wsclean step for dirty-only image"
-        params:
-          column: CORRECTED_DATA
-          weight: 'briggs 0'
-          niter: 0
-
-      dirty_pol:
-        _use: lib.steps.wsclean.dirty
-        info: "wsclean step for dirty-only IQUV image"
-        cab: wsclean_pol
-        params:
-          pol: IQUV
-
-      image:
-        _use: lib.steps.wsclean.dirty
-        info: "wsclean step for imaging"
-        params:
-          column: CORRECTED_DATA
-          mgain: 0.8 #0.9
-          weight: 'briggs 0'
-          niter: 100000
-          join-channels: true
-          fit-spectral-pol: 4        
-
-      chgcentre: 
-        _use: lib.steps.wsclean.base
-        params:
-          chgcentre: true
-
-      predict:
-        _use: lib.steps.wsclean.base
-        info: "wsclean step for predicting a model"
-        params:
-          predict: true
 
 
-    quartical:
-      cab: quartical
-      params:
-        input_ms.time_chunk: '16'
-        input_ms.freq_chunk: '0'
-        input_ms.group_by: [SCAN_NUMBER,FIELD_ID,DATA_DESC_ID]
-        input_ms.select_uv_range: [0, 0]
-        input_ms.select_corr: [0, 3]
-        input_model.apply_p_jones: false
-        solver.terms: [K]
-        solver.iter_recipe: [25]
-        solver.propagate_flags: true
-        solver.robust: false
-        output.overwrite: true
-        output.products: [corrected_data]
-        output.columns: [CORRECTED_DATA]
-        output.flags: true
-        output.apply_p_jones_inv: false
-        output.net_gain: false
-        mad_flags.enable: true
-        mad_flags.threshold_bl: 5
-        mad_flags.threshold_global: 5
-        mad_flags.max_deviation: 5
-        K.time_interval: 1
-        K.freq_interval: 0
-        K.type: delay
+
