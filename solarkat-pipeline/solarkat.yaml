@@ -52,18 +52,19 @@ solarkat:
       cab: wsclean
       params:
         ms: =recipe.ms
-        prefix: '{recipe.image-prefix}'
-        scale: 1.5asec
-        column: DATA
-        mgain: 0.8
         nchan: 4
-        weight: 'briggs 0'
-        join-channels: true
-        niter: 3
+        mgain: 0.8
+        size: 1000
+        niter: 10000
+        padding: 2.0
+        column: DATA
+        scale: 1.5asec
         auto-threshold: 3
-        size: 10000
+        weight: 'briggs 0'
+        join-channels: true 
         fit-spectral-pol: 4 
         temp-dir: =recipe.dirs.temp
+        prefix: '{recipe.image-prefix}'
 
     mask-1:
       cab: breizorro
@@ -79,20 +80,20 @@ solarkat:
       cab: wsclean
       params:
         ms: =recipe.ms
-        prefix: '{recipe.image-prefix}'
+        nchan: 4
+        mgain: 0.8
+        size: 10000
+        niter: 100000
+        padding: 2.0
         column: DATA
         scale: 1.5asec
-        padding: 2.0
-        niter: 100000
         auto-threshold: 3
-        mgain: 0.8
-        weight: 'briggs 0'
-        nchan: 4
+        weight: 'briggs 0'        
         join-channels: true
         fit-spectral-pol: 4 
-        size:  10000
         fits-mask: "{previous.mask}"
-        temp-dir: =recipe.dirs.temp 
+        temp-dir: =recipe.dirs.temp
+        prefix: '{recipe.image-prefix}'
 
     save-flags-1: 
       cab: casa.flagman
@@ -107,7 +108,7 @@ solarkat:
       cab: quartical
       info: "Self-calibration"
       params:
-        input_ms.path: '{recipe.ms}'
+        input_ms.path: =recipe.ms
         input_ms.time_chunk: '128'
         input_model.recipe: MODEL_DATA
         solver.terms: [K]
@@ -135,20 +136,19 @@ solarkat:
       info: "Breizorro-masked deep I clean"
       cab: wsclean
       params:
-        ms: =recipe.ms
-        prefix: '{recipe.image-prefix}'
-        scale: 1.5asec
-        padding: 2.0
-        niter: 100000
-        size:  10000 
+        ms: =recipe.ms        
         nchan: 4
-        column: CORRECTED_DATA
-        auto-threshold: =UNSET
         mgain: 0.8
+        size:  10000
+        niter: 100000
+        padding: 2.0
+        scale: 1.5asec                        
         weight: 'briggs 0'
         join-channels: true
-        fit-spectral-pol: 4 
+        fit-spectral-pol: 4
+        column: CORRECTED_DATA
         temp-dir: =recipe.dirs.temp
+        prefix: '{recipe.image-prefix}'
         fits-mask: "{steps.image-1.prefix}-mask.fits"
 
     backup-model-data:
@@ -179,7 +179,7 @@ solarkat:
       info: ' Split the MS into scans using as input the scan_numbers'
       params:
         scan_list: =steps.load-scan-numbers.scan_numbers 
-        ms: '{recipe.ms}'
+        ms: =recipe.ms
       recipe:
         inputs:
           scan_list:
@@ -193,7 +193,7 @@ solarkat:
           casa_split_scan:
             cab: splitms_scan
             params:
-              vis: '{root.ms}'
+              vis: =root.ms
               datacolumn: 'all'
               scan: '{recipe.scan}'
               outputvis: ="{root.dir_out}" + "/" + "{root.perscan_dir_out}" + "/" + STRIPEXT(BASENAME(recipe.ms)) + "_scan_{recipe.scan}.ms"
@@ -229,7 +229,7 @@ solarkat:
     image-sun:
       info: "Create a dirty image of the Sun's field for each scan"
       params:
-        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")         
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")  
       recipe:
         inputs:
           ms_list:
@@ -241,28 +241,27 @@ solarkat:
           image:
             cab: wsclean
             params: 
-              scale: 1.5asec 
               niter: 0
               nchan: 4
               size: 6000
+              scale: 1.5asec 
               ms: =recipe.ms
               column: CORRECTED_DATA
               temp-dir: =root.dirs.temp
-              save-source-list: =UNSET 
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.sun_images_dir}/" + STRIPEXT(BASENAME(recipe.ms))
 
 
     create-ds9-regions:
       cab: create_ds9_regions
-      info: 'Create ds9 regions for each'
+      info: 'Create ds9 regions for each Sun image.'
       params:
-        ms: '{recipe.ms}'
+        ms: =recipe.ms
         input_file: '{recipe.steps.get-sun-coordinates.output_file}'
         output_dir: '{recipe.dir_out}/{recipe.regions_dir_out}' 
 
 
     make-mask:      
-      info: 'Creating a fits mask with breizorro'
+      info: 'Sun Fits-mask creation in each scan with breizorro'
       recipe:
         inputs:
           scan_list:
@@ -313,18 +312,17 @@ solarkat:
         steps:
           image:
             cab: wsclean
-            params:
-              ms: =recipe.ms 
+            params:              
+              nchan: 4
               size:  6000
-              scale: 1.5asec 
-              niter: 10000
-              multiscale: true
-              #threshold: 3.55e-4 #This is selected according to each dataset
-              join-channels: true 
+              niter: 100000
+              ms: =recipe.ms
+              scale: 1.5asec               
+              multiscale: true 
               auto-threshold: 1
+              join-channels: true
               fit-spectral-pol: 4
-              save-source-list: true 
-              nchan: 4 
+              save-source-list: true  
               column: CORRECTED_DATA 
               temp-dir: =root.dirs.temp
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.ms))
@@ -351,11 +349,11 @@ solarkat:
           predict:
             cab: wsclean        
             params:
-              size:   6000 
+              nchan: 4
+              size:   6000
+              ms: =recipe.ms
               scale: 1.5asec
               predict: true
-              nchan: 4
-              ms: '{recipe.ms}'
               temp-dir: =root.dirs.temp
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.ms)) 
 
@@ -393,45 +391,46 @@ solarkat:
       cab: quartical
       info: 'Selfcal + peel sun'
       params:
-        input_ms.path: '{recipe.ms}'
-        input_ms.weight_column: WEIGHT_SPECTRUM
+        input_ms.path: =recipe.ms
+        input_ms.is_bda: False
         input_ms.time_chunk: '14'
-        input_ms.freq_chunk: '0'
+        input_ms.freq_chunk: '0'        
         input_ms.select_uv_range: [0,0]
+        input_ms.weight_column: WEIGHT_SPECTRUM
         input_ms.group_by: [FIELD_ID,DATA_DESC_ID,SCAN_NUMBER]
         input_model.recipe: MODEL_DATA_ORIGINAL:MODEL_DATA_SUN
-        input_model.apply_p_jones: false
-        input_ms.is_bda: False
+        input_model.apply_p_jones: false        
         solver.terms: [K,dE]
         solver.iter_recipe: [100,50]
         solver.propagate_flags: false
         solver.robust: false 
         solver.threads: 4
         dask.threads: 8
-        output.gain_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/peeled.qc'
-        output.log_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/'
-        output.overwrite: true
-        output.products: [corrected_residual]
-        output.columns: [CORRECTED_RESIDUAL]
-        output.subtract_directions: [1]
-        output.flags: true 
-        output.apply_p_jones_inv: false
         mad_flags.enable: false
         dask.scheduler: threads
         K.type: phase
-        K.direction_dependent: false
         K.time_interval: 4
         K.freq_interval: 0
         K.initial_estimate: true
+        K.direction_dependent: false        
         dE.type: complex
         dE.time_interval: 14
         dE.freq_interval: 64
-        dE.initial_estimate: False
-        dE.direction_dependent: true
         dE.pinned_directions: [0]
+        dE.initial_estimate: False
+        dE.direction_dependent: true        
+        output.flags: true
+        output.overwrite: true
+        output.subtract_directions: [1]
+        output.apply_p_jones_inv: false        
+        output.products: [corrected_residual]
+        output.columns: [CORRECTED_RESIDUAL]
+        output.log_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/'
+        output.gain_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/peeled.qc'
+        
 
 
-    save-flags-5:
+    save-flags-3:
       cab: casa.flagman
       params:
         ms: =recipe.ms
@@ -439,21 +438,21 @@ solarkat:
         mode: save
 
 
-    image-7:
+    image-4:
       info: "Deconvolve the improved image"
       cab: wsclean
       params:
-        ms: =recipe.ms
-        prefix: '{recipe.image-prefix}'
-        scale: 1.5asec
+        nchan: 4
+        mgain: 0.8
+        size:  10000
         padding: 2.0
         niter: 100000
-        nchan: 4
+        ms: =recipe.ms
+        scale: 1.5asec
         auto-threshold: 3
-        size:  10000
+        weight: 'briggs 0'
+        join-channels: true                
         column: CORRECTED_RESIDUAL
         temp-dir: =recipe.dirs.temp
-        mgain: 0.8
-        weight: 'briggs 0'
-        join-channels: true
+        prefix: '{recipe.image-prefix}'
 
