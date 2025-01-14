@@ -1,3 +1,4 @@
+![Cópia_de_solarkat-removebg-preview](https://github.com/user-attachments/assets/58d0a4cd-481a-48ff-9798-508bf12b7871)
 # SolarKAT
 
 SolarKAT is a solar imaging pipeline developed to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
