@@ -38,15 +38,26 @@ setup(
 
     python_requires='>=3.9',  
 
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Science/Research',
+    classifiers=[ 
+        'Development Status :: 4 - Beta', 
+        'Intended Audience :: Science/Research',  
         'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
-        'Topic :: Scientific/Engineering :: Astronomy',
+        'Programming Language :: Python :: 3.13',
+        'Topic :: Scientific/Engineering :: Radioastronomy',
     ],
+
+    include = [
+    'solarkat/solarkat-pipeline/solarkat.yaml',
+    'solarkat/solarkat-pipeline/solarkat-cabs.yaml',
+    'solarkat/solarkat-pipeline/solarkat-observation-sets.yaml',
+    'solarkat/solarkat/solarkat.py',
+    ]
 )
+
