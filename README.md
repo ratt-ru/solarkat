@@ -4,6 +4,13 @@
  
 </div>
 
+<div align="center">
+ 
+  <img src="solarkat-logo.png" alt="SolarKAT Logo" width="500">
+ 
+</div>
+
+
 <h1>Welcome to SolarKAT 🚀</h1>
 
 SolarKAT is a solar imaging pipeline developed to mitigate solar interference in MeerKAT data and recover the visibilities rather than discarding them.
