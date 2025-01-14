@@ -17,7 +17,7 @@ Its wide field of view and high sensitivity make the MeerKAT telescope capable o
 
 ### Git clone
 You can have access to SolarKAT by cloning it from the repository to your local computer.
-To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment.
+To Run SolarKAT, you must first install Stimela (the framework on which SolarKAT is based). Stimela is installed in a virtual environment. In addition to stimela install cult-cargo. Both should be in the master branch.
 
 ```
 git clone https://github.com/ratt-ru/solarkat.git
