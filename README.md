@@ -1,12 +1,6 @@
 <div align="center">
  
-  <img src="solarkat_logo.png" alt="SolarKAT Logo" width="500">
- 
-</div>
-
-<div align="center">
- 
-  <img src="solarkat-logo.png" alt="SolarKAT Logo" width="500">
+  <img src="solarkat_logo.png" alt="SolarKAT Logo" width="600">
  
 </div>
 
