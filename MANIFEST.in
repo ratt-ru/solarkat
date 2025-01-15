@@ -1,3 +1,2 @@
-include solarkat_pipeline/*
-include solarkat/solarkat.py
+recursive-include *.yaml
 include README.md

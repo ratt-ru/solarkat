@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "solarkat"
+version = "1.0.4"
+description = "Solar imaging pipeline for solar interference mitigation in MeerKAT data."
+authors = ["Victória da Graça G. Samboco <vicky.samboco@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ratt-ru/solarkat.git"
+documentation = "https://solarkat-docs.readthedocs.io/en/latest/"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy"
+]
+include = [
+    "solarkat/solarkat.yaml",
+    "solarkat/solarkat-cabs.yaml",
+    "solarkat/solarkat-observation-sets.yaml", 
+    "solarkat/solarkat.py" 
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+stimela = "^2.0.1"
+cult-cargo = "^0.1.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
