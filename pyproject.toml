@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solarkat"
-version = "1.0.4"
+version = "1.0.5"
 description = "Solar imaging pipeline for solar interference mitigation in MeerKAT data."
 authors = ["Victória da Graça G. Samboco <vicky.samboco@gmail.com>"]
 license = "MIT"

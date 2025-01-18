@@ -5,7 +5,6 @@ _include:
     - breizorro.yml
     - crystalball.yml
     - msutils.yml
-    - fitstool.yml
     - bdsf.yml
     - wsclean.yml
     - quartical.yml
