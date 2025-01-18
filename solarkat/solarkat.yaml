@@ -162,42 +162,45 @@ solarkat:
 
 
     scan-numbers-extraction:
-      info: 'Extract a list of unique scan numbers from a Seasurement Set. The scans output parameter is a list of strings representing the unique scan numbers.'
+      info: 'Extract a list of unique scan numbers from a Measurement Set. The scan output parameter is a list of strings representing the unique scan numbers.'
       cab: extract_and_save_scan_numbers
       params:
         ms: =recipe.ms
         output_file: ='{recipe.dir_out}/scan-numbers.txt' 
 
 
-    load-scan-numbers:
-      cab: load_scan_numbers
-      params:
-        scans_file: =steps.scan-numbers-extraction.output_file
-
-
-    split-ms-by-scan: 
-      info: ' Split the MS into scans using as input the scan_numbers'
-      params:
-        scan_list: =steps.load-scan-numbers.scan_numbers 
-        ms: =recipe.ms
+    split-ms-by-scan:
+      info: 'Load scan numbers extracted in the previous step and Split the MS into scans using as input the scan_numbers'
       recipe:
         inputs:
-          scan_list:
-            dtype: List[str]
-          ms:
-            dtype: MS
-        for_loop:
-          var: scan
-          over: scan_list
-        steps:     
-          casa_split_scan:
-            cab: splitms_scan
+          scan_file:
+            dtype: File
+        steps:
+          load-scan-numbers:
+            cab: load_scan_numbers
             params:
-              vis: =root.ms
-              datacolumn: 'all'
-              scan: '{recipe.scan}'
-              outputvis: ="{root.dir_out}" + "/" + "{root.perscan_dir_out}" + "/" + STRIPEXT(BASENAME(recipe.ms)) + "_scan_{recipe.scan}.ms"
-            skip_if_outputs: exist
+              scans_file: =root.steps.scan-numbers-extraction.output_file
+          split-ms:
+            params:
+              scan_list: =steps.load-scan-numbers.scan_numbers
+            recipe:
+              inputs:
+                scan_list:
+                  dtype: List[str]
+                ms:
+                  dtype: MS
+              for_loop:
+                var: scan
+                over: scan_list
+              steps:
+                casa_split_scan:
+                  cab: splitms_scan
+                  params:
+                    vis: '{root.ms}'
+                    datacolumn: 'all'
+                    scan: '{recipe.scan}'
+                    outputvis: ="{root.dir_out}" + "/" + "{root.perscan_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}.ms"
+
 
     get-perscan-old-coords: 
       cab: get_old_coords
