@@ -1,0 +1,30 @@
+/users/vicky/.local/lib/python3.10/site-packages/stimela:
+  version: 2.0.3.1
+  mtime: 1743759161.0290897
+  mtime_str: Fri Apr  4 11:32:41 2025
+/users/vicky/.local/lib/python3.10/site-packages/stimela/config.py:
+  origin: /users/vicky/.local/lib/python3.10/site-packages/stimela
+/users/vicky/.local/lib/python3.10/site-packages/scabha/configuratt/__init__.py:
+  origin: /users/vicky/.local/lib/python3.10/site-packages/stimela
+/idia/users/vicky/venvs/breifast-env/lib/python3.10/site-packages/scabha/configuratt/cache.py:
+  version: null
+  mtime: 1742334707.6609569
+  mtime_str: Tue Mar 18 23:51:47 2025
+  md5hash: 413c28261f00873293bdb574eda39cf8
+/users/vicky/.local/lib/python3.10/site-packages/stimela/stimela.conf:
+  mtime: 1743759160.7410867
+  mtime_str: Fri Apr  4 11:32:40 2025
+  md5hash: 843e72355d34615d96a943da475592c1
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/stimela.conf:
+  mtime: 1743761447.5131583
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: d8547362d63e7bb23c550ef5ac13fc0b
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/genesis/cult-cargo-base.yml:
+  mtime: 1743761447.4171572
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 6d406f9ea1abbba6325d269d245088fe
+/users/vicky/.local/lib/python3.10/site-packages/scabha/configuratt/cache.py:
+  version: null
+  mtime: 1743759160.6290853
+  mtime_str: Fri Apr  4 11:32:40 2025
+  md5hash: 413c28261f00873293bdb574eda39cf8

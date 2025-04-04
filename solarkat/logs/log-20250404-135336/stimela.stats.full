@@ -1,0 +1,74 @@
+solarkat:
+  elapsed: 11.574558
+  avg:
+    cpu: 17.415384615384617
+    mem_used: 13.0
+    mem_total: 31.0
+    load: 1.2818885216346154
+    read_count: 0.0
+    read_gb: 0.0
+    read_gbps: 0.0
+    read_ms: 0.0
+    write_count: 3.923076923076923
+    write_gb: 3.3158522385817305e-05
+    write_gbps: 2.7448049601863048e-05
+    write_ms: 3.3076923076923075
+    num_samples: 1.0
+  peak:
+    cpu: 75.0
+    mem_used: 13
+    mem_total: 31
+    load: 1.3359375
+    read_count: 0
+    read_gb: 0
+    read_gbps: 0
+    read_ms: 0
+    write_count: 17
+    write_gb: 0.00012969970703125
+    write_gbps: 0.00012955991188632465
+    write_ms: 13
+    num_samples: 1
+  total:
+    read_count: 0
+    read_gb: 0.0
+    read_ms: 0
+    write_count: 51
+    write_gb: 0.000431060791015625
+    write_ms: 43
+solarkat.backup-model-data:
+  elapsed: 7.681509
+  avg:
+    cpu: 18.963636363636365
+    mem_used: 13.0
+    mem_total: 31.0
+    load: 1.287109375
+    read_count: 0.0
+    read_gb: 0.0
+    read_gbps: 0.0
+    read_ms: 0.0
+    write_count: 4.636363636363637
+    write_gb: 3.918734463778409e-05
+    write_gbps: 3.243860407492906e-05
+    write_ms: 3.909090909090909
+    num_samples: 1.0
+  peak:
+    cpu: 75.0
+    mem_used: 13
+    mem_total: 31
+    load: 1.3359375
+    read_count: 0
+    read_gb: 0
+    read_gbps: 0
+    read_ms: 0
+    write_count: 17
+    write_gb: 0.00012969970703125
+    write_gbps: 0.00012955991188632465
+    write_ms: 13
+    num_samples: 1
+  total:
+    read_count: 0
+    read_gb: 0.0
+    read_ms: 0
+    write_count: 51
+    write_gb: 0.000431060791015625
+    write_ms: 43

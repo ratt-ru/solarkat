@@ -1,27 +1,17 @@
 
 _include:
   (cultcargo):
-    - casa-flag.yml
+    - casa/flag.yml
     - breizorro.yml
     - crystalball.yml
     - msutils.yml
     - bdsf.yml
     - wsclean.yml
     - quartical.yml
+    - msutils.yml
 
 
 cabs:
-  rename_model_data:
-    command: solarkat.rename_model_data_column
-    flavour: python
-    inputs:
-      ms:
-        dtype: MS
-        required: true
-      oldname:
-        dtype: str
-      newname:
-        dtype: str
 
   extract_and_save_scan_numbers:
     info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a>'
@@ -95,6 +85,7 @@ cabs:
       output_file:
         dtype: File
 
+
   shift_coords:
     command: solarkat.shift_coordinates
     flavour: python
@@ -109,10 +100,11 @@ cabs:
       datacolumn:
         dtype: str
 
+
   create_ds9_regions:
     command: solarkat.create_ds9_region_from_file
     flavour: python
-    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates fil>'
+    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
     inputs:
       input_file:
         dtype: File
@@ -122,37 +114,3 @@ cabs:
       ms:
         dtype: MS
         required: true
-
-  add_model_data_column:
-    command: solarkat.add_column_to_ms
-    flavour: python
-    inputs:
-      ms:
-        dtype: MS
-        required: true
-      colnames:
-        dtype: List[str]
-        required: true
-      likecol:
-        dtype: str
-        required: true
-
-
-  copy_model_data_to_model_data_sun:
-    command: solarkat.copy_model_data_to_model_data_sun 
-    info: 'copying a column from a list of MS to a single ms'
-    flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
-      ms:
-        dtype: MS
-      copycol:
-        dtype: str
-      tocol:
-        dtype: str
-
-
-
-
-

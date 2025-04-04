@@ -1,0 +1,8 @@
+2025-04-04 14:45:15 STIMELA INFO: saving config dependencies to ./stimela.config.deps
+2025-04-04 14:45:15 STIMELA INFO: will load recipe/config file(s) solarkat.yaml
+2025-04-04 14:45:15 STIMELA INFO: treating 'solarkat' as a recipe or cab name
+2025-04-04 14:45:32 STIMELA INFO: selected recipe is 'solarkat'
+2025-04-04 14:45:48 STIMELA INFO: pre-validating the recipe
+2025-04-04 14:45:56 STIMELA INFO: recipe logs will be saved under logs/log-20250404-144514
+2025-04-04 14:45:56 STIMELA INFO: saved recipe dependencies to logs/log-20250404-144514/stimela.recipe.deps
+2025-04-04 14:46:05 STIMELA ERROR: run failed after 0:00:08

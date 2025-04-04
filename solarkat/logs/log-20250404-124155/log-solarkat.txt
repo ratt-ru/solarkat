@@ -1,0 +1,22 @@
+2025-04-04 12:42:35 STIMELA.solarkat INFO: selecting recipe steps for (sub)recipe: [bold green]solarkat recipe[/bold green]
+2025-04-04 12:42:35 STIMELA.solarkat INFO: the following step(s) have been explicitly selected: (backup-model-data)
+2025-04-04 12:42:35 STIMELA.solarkat INFO: the following step(s) have been cherry-picked: (backup-model-data)
+2025-04-04 12:42:35 STIMELA.solarkat INFO: the following recipe steps have been selected for execution:
+2025-04-04 12:42:35 STIMELA.solarkat INFO:     [bold green]backup-model-data[/bold green]
+2025-04-04 12:42:36 STIMELA.solarkat INFO: ### validated inputs
+2025-04-04 12:42:36 STIMELA.solarkat INFO: recipe 'solarkat recipe':
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   obs = L1
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   suffix = 
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   dir_out = obs1
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   ms = /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   splitted_ms_suffix = _scan_
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   mask-1.outfile = Unresolved(outfile)
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   mask-1.outcatalog = Unresolved(outcatalog)
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   mask-1.outregion = Unresolved(outregion)
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   make-mask.making_masks.make_mask.outfile = Unresolved(outfile)
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   make-mask.making_masks.make_mask.outcatalog = Unresolved(outcatalog)
+2025-04-04 12:42:36 STIMELA.solarkat INFO:   make-mask.making_masks.make_mask.outregion = Unresolved(outregion)
+2025-04-04 12:42:36 STIMELA.solarkat ERROR: step 'solarkat': invalid inputs: 'mask-1.outfile', 'mask-1.outcatalog', 'mask-1.outregion', 'make-mask.making_masks.make_mask.outfile', 'make-mask.making_masks.make_mask.outcatalog', 'make-mask.making_masks.make_mask.outregion'
+2025-04-04 12:42:36 STIMELA.solarkat INFO: saved full profiling stats to logs/log-20250404-124155/stimela.stats.full
+2025-04-04 12:42:36 STIMELA.solarkat INFO: saved summary to logs/log-20250404-124155/stimela.stats.summary.txt
+2025-04-04 12:42:36 STIMELA.solarkat INFO: last log directory was [bold green]logs/log-20250404-124155[/bold green]

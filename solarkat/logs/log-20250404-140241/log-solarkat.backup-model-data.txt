@@ -1,0 +1,16 @@
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO: ### validated inputs
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO: cab from:
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO:   msname = /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO:   old-column = CORRECTED_DATA_ORIGINAL
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO:   new-column = CORRECTED_DATA
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO: singularity image /users/vicky/.singularity/quay.io-stimela2-python-astro:cc0.2.0.simg exists
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO: binding /idia/users/vicky as rw
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO: binding /users/vicky/tmp/tmp1sjus41x to /tmp as rw
+2025-04-04 14:03:25 STIMELA.solarkat.backup-model-data INFO: binding /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms as rw
+### running /opt/slurm/bin/srun -J backup-model-data.solarkat --time 1-12 --mem 200GB --cpus-per-task 1 /software/common/singularity/4.1.3/bin/singularity exec --pwd /idia/users/vicky/software/solarkat/solarkat --contain --bind /idia/users/vicky:/idia/users/vicky:rw --bind /users/vicky/tmp/tmp1sjus41x:/tmp:rw --bind /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms:/users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms:rw /users/vicky/.singularity/quay.io-stimela2-python-astro:cc0.2.0.simg python -u -c ...
+# srun: job 10651743 queued and waiting for resources
+# srun: job 10651743 has been allocated resources
+# Successful read/write open of default-locked table /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms: 29 columns, 2841280 rows
+# 2025-04-04 12:03:58	INFO		Process 707678: waiting for write-lock on file /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms/table.lock
+# 2025-04-04 12:04:34	INFO		Process 707678: acquired write-lock on file /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms/table.lock
+2025-04-04 14:04:34 STIMELA.solarkat.backup-model-data INFO: [python] returns exit code 0 after 0:01:09

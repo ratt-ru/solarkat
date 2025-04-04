@@ -1,6 +1,6 @@
 obs:
   L1:
-    ms: /home/samboco/solarKAT/SUN_IMAGING_STEPS/pipeline/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
+    ms: /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
     dir_out: obs1
     perscan_dir_out: "ms_scans"
     sun_images_dir: "sun_images"

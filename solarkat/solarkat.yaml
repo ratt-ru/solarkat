@@ -18,10 +18,10 @@ solarkat:
 
   assign:
     image-prefix: '{recipe.dir_out}/im{info.suffix}/im{info.suffix}{recipe.suffix}'
-    mask-prefix: '{recipe.dir_out}/im{info.suffix}/mask{info.suffix}{recipe.suffix}'          
+    mask-prefix: '{recipe.dir_out}/im{info.suffix}/mask{info.suffix}{recipe.suffix}'
     dirs:
       ms: ../msdir       # MSs live here
-      temp: ./tmp  
+      temp: ./tmp
 
   assign_based_on:
     _include: solarkat-observation-sets.yaml
@@ -71,8 +71,10 @@ solarkat:
       info: 'Creating a fits mask with breizorro'
       params:
         threshold: 15
-        mask: '{previous.prefix}-mask.fits'
+        outfile: '{previous.prefix}-mask.fits'
         restored-image: "{previous.prefix}-MFS-image.fits"
+        outcatalog: None
+        outregion: None
 
 
     image-2: 
@@ -152,13 +154,13 @@ solarkat:
         fits-mask: "{steps.image-1.prefix}-mask.fits"
 
     backup-model-data:
-      cab: rename_model_data
+      cab: msutils.renamecol
       info: 'Renaming the MODEL_DATA visibilities to ORIGINAL_MODEL_DATA (saving the MODEL_DATA of the original visibilities)'
       skip: false
       params:
-        ms: =recipe.ms
-        oldname: 'MODEL_DATA'
-        newname: 'MODEL_DATA_ORIGINAL' 
+        msname: =recipe.ms
+        old-column: 'MODEL_DATA'
+        new-column: 'MODEL_DATA_ORIGINAL' 
 
 
     scan-numbers-extraction:
@@ -208,7 +210,7 @@ solarkat:
       params: 
         output_file: '{recipe.dir_out}/old-perscans-coods.txt'
         ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
-                
+
 
     get-sun-coordinates: 
       cab: sun_coordinates
@@ -226,8 +228,6 @@ solarkat:
         coords: '{recipe.steps.get-sun-coordinates.output_file}'
         splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
         datacolumn: 'all'
-        
-        
 
     image-sun:
       info: "Create a dirty image of the Sun's field for each scan"
@@ -294,7 +294,9 @@ solarkat:
                     restored-image: ="{root.dir_out}/{root.perscan_dir_out}/{root.sun_images_dir}/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}-MFS-image.fits"
                     threshold: 999999999999
                     merge: ="{root.dir_out}" + "/" + "{root.regions_dir_out}" + "/" + "sun-region-{recipe.scan}.reg"
-                    mask: ="{root.dir_out}" + "/" + "{root.masks_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}-mask.fits"
+                    outfile: ="{root.dir_out}" + "/" + "{root.masks_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}-mask.fits"
+                    outcatalog: None
+                    outregion: None
 
 
 
@@ -372,22 +374,38 @@ solarkat:
 
 
     add-model-data-columnn:
-      cab: add_model_data_column
+      cab: msutils.addcol
       info: "Add MODEL_DATA_SUN column to the original MS"
       params:
-        ms:  =recipe.ms
-        colnames: ['MODEL_DATA_SUN']
+        msname:  =recipe.ms
+        colname: 'MODEL_DATA_SUN'
         likecol: 'MODEL_DATA_ORIGINAL'
 
 
-    data-storage:
+    copycolumn:
       info: 'Copying data from MODEL_DATA to MODEL_DATA_SUN, from each scan in the MS to the single MS'
-      cab:  copy_model_data_to_model_data_sun
       params:
-        ms: =recipe.ms
-        copycol: 'MODEL_DATA'
-        tocol: 'MODEL_DATA_SUN'
-        ms_list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+        ms-list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+      recipe:
+        inputs:
+          msname:
+            dtype: MS
+          fromcol:
+            dtype: str
+          tocol:
+            dtype: str
+          ms-list:
+            dtype: List[MS]
+        for_loop:
+          var: ms
+          over: ms-list
+        steps:
+          copy-column: 
+            cab:  msutils.copycol
+            params:
+              msname: =recipe.ms
+              fromcol: 'MODEL_DATA'
+              tocol: 'MODEL_DATA_SUN'
 
 
     cal-and-peel-sun:
@@ -397,16 +415,16 @@ solarkat:
         input_ms.path: =recipe.ms
         input_ms.is_bda: False
         input_ms.time_chunk: '14'
-        input_ms.freq_chunk: '0'        
+        input_ms.freq_chunk: '0'
         input_ms.select_uv_range: [0,0]
         input_ms.weight_column: WEIGHT_SPECTRUM
         input_ms.group_by: [FIELD_ID,DATA_DESC_ID,SCAN_NUMBER]
         input_model.recipe: MODEL_DATA_ORIGINAL:MODEL_DATA_SUN
-        input_model.apply_p_jones: false        
+        input_model.apply_p_jones: false
         solver.terms: [K,dE]
         solver.iter_recipe: [100,50]
         solver.propagate_flags: false
-        solver.robust: false 
+        solver.robust: false
         solver.threads: 4
         dask.threads: 8
         mad_flags.enable: false
@@ -415,22 +433,21 @@ solarkat:
         K.time_interval: 4
         K.freq_interval: 0
         K.initial_estimate: true
-        K.direction_dependent: false        
+        K.direction_dependent: false
         dE.type: complex
         dE.time_interval: 14
         dE.freq_interval: 64
         dE.pinned_directions: [0]
         dE.initial_estimate: False
-        dE.direction_dependent: true        
+        dE.direction_dependent: true
         output.flags: true
         output.overwrite: true
         output.subtract_directions: [1]
-        output.apply_p_jones_inv: false        
+        output.apply_p_jones_inv: false
         output.products: [corrected_residual]
         output.columns: [CORRECTED_RESIDUAL]
         output.log_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/'
         output.gain_directory: '{recipe.dir_out}/{recipe.qcal_output_dir}/peeled.qc'
-        
 
 
     save-flags-3:
@@ -454,7 +471,7 @@ solarkat:
         scale: 1.5asec
         auto-threshold: 3
         weight: 'briggs 0'
-        join-channels: true                
+        join-channels: true
         column: CORRECTED_RESIDUAL
         temp-dir: =recipe.dirs.temp
         prefix: '{recipe.image-prefix}'

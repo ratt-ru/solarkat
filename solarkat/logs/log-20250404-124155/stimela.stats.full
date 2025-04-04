@@ -1,0 +1,37 @@
+solarkat:
+  elapsed: 0.0
+  avg:
+    cpu: 18.0
+    mem_used: 14.0
+    mem_total: 31.0
+    load: 0.51171875
+    read_count: 0.0
+    read_gb: 0.0
+    read_gbps: 0.0
+    read_ms: 0.0
+    write_count: 0.0
+    write_gb: 0.0
+    write_gbps: 0.0
+    write_ms: 0.0
+    num_samples: 1.0
+  peak:
+    cpu: 18.0
+    mem_used: 14
+    mem_total: 31
+    load: 0.51171875
+    read_count: 0
+    read_gb: 0
+    read_gbps: 0
+    read_ms: 0
+    write_count: 0
+    write_gb: 0
+    write_gbps: 0
+    write_ms: 0
+    num_samples: 1
+  total:
+    read_count: 0
+    read_gb: 0
+    read_ms: 0
+    write_count: 0
+    write_gb: 0
+    write_ms: 0

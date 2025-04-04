@@ -1,0 +1,5 @@
+2025-04-04 14:45:56 STIMELA.solarkat.copycolumn INFO: selecting recipe steps for (sub)recipe: [bold green]copycolumn[/bold green]
+2025-04-04 14:46:04 STIMELA.solarkat.copycolumn ERROR: error validating inputs:
+2025-04-04 14:46:04 STIMELA.solarkat.copycolumn ERROR: ### summary of inputs follows
+2025-04-04 14:46:04 STIMELA.solarkat.copycolumn ERROR: recipe 'copycolumn':
+2025-04-04 14:46:04 STIMELA.solarkat.copycolumn ERROR:   ms-list = []

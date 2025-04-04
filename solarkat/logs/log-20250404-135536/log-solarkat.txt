@@ -1,0 +1,18 @@
+2025-04-04 13:56:15 STIMELA.solarkat INFO: selecting recipe steps for (sub)recipe: [bold green]solarkat recipe[/bold green]
+2025-04-04 13:56:15 STIMELA.solarkat INFO: the following step(s) have been explicitly selected: (backup-model-data)
+2025-04-04 13:56:15 STIMELA.solarkat INFO: the following step(s) have been cherry-picked: (backup-model-data)
+2025-04-04 13:56:15 STIMELA.solarkat INFO: the following recipe steps have been selected for execution:
+2025-04-04 13:56:15 STIMELA.solarkat INFO:     [bold green]backup-model-data[/bold green]
+2025-04-04 13:56:16 STIMELA.solarkat INFO: ### validated inputs
+2025-04-04 13:56:16 STIMELA.solarkat INFO: recipe 'solarkat recipe':
+2025-04-04 13:56:16 STIMELA.solarkat INFO:   obs = L1
+2025-04-04 13:56:16 STIMELA.solarkat INFO:   suffix = 
+2025-04-04 13:56:16 STIMELA.solarkat INFO:   dir_out = obs1
+2025-04-04 13:56:16 STIMELA.solarkat INFO:   ms = /users/vicky/workspace/projects/solarkat/data/msdir/1645272078_sdp_l0_1024ch_J0333-2741.ms
+2025-04-04 13:56:16 STIMELA.solarkat INFO:   splitted_ms_suffix = _scan_
+2025-04-04 13:56:17 STIMELA.solarkat INFO: running recipe 'solarkat recipe'
+2025-04-04 13:56:19 STIMELA.solarkat INFO: processing step 'backup-model-data'
+2025-04-04 13:56:19 STIMELA.solarkat INFO:   (Renaming the MODEL_DATA visibilities to ORIGINAL_MODEL_DATA (saving the MODEL_DATA of the original visibilities))
+2025-04-04 13:57:16 STIMELA.solarkat INFO: saved full profiling stats to logs/log-20250404-135536/stimela.stats.full
+2025-04-04 13:57:16 STIMELA.solarkat INFO: saved summary to logs/log-20250404-135536/stimela.stats.summary.txt
+2025-04-04 13:57:17 STIMELA.solarkat INFO: last log directory was [bold green]logs/log-20250404-135536[/bold green]

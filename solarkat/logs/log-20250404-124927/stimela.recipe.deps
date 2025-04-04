@@ -1,0 +1,107 @@
+/users/vicky/.local/lib/python3.10/site-packages/stimela:
+  version: 2.0.3.1
+  mtime: 1743759161.0290897
+  mtime_str: Fri Apr  4 11:32:41 2025
+/users/vicky/.local/lib/python3.10/site-packages/stimela/config.py:
+  origin: /users/vicky/.local/lib/python3.10/site-packages/stimela
+/users/vicky/.local/lib/python3.10/site-packages/scabha/configuratt/__init__.py:
+  origin: /users/vicky/.local/lib/python3.10/site-packages/stimela
+/idia/users/vicky/venvs/breifast-env/lib/python3.10/site-packages/scabha/configuratt/cache.py:
+  version: null
+  mtime: 1742334707.6609569
+  mtime_str: Tue Mar 18 23:51:47 2025
+  md5hash: 413c28261f00873293bdb574eda39cf8
+/users/vicky/.local/lib/python3.10/site-packages/stimela/stimela.conf:
+  mtime: 1743759160.7410867
+  mtime_str: Fri Apr  4 11:32:40 2025
+  md5hash: 843e72355d34615d96a943da475592c1
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/stimela.conf:
+  mtime: 1743761447.5131583
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: d8547362d63e7bb23c550ef5ac13fc0b
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/genesis/cult-cargo-base.yml:
+  mtime: 1743761447.4171572
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 6d406f9ea1abbba6325d269d245088fe
+/users/vicky/.local/lib/python3.10/site-packages/scabha/configuratt/cache.py:
+  version: null
+  mtime: 1743759160.6290853
+  mtime_str: Fri Apr  4 11:32:40 2025
+  md5hash: 413c28261f00873293bdb574eda39cf8
+/idia/users/vicky/software/solarkat/solarkat/solarkat.yaml:
+  mtime: 1743763760.1238935
+  mtime_str: Fri Apr  4 12:49:20 2025
+  md5hash: 055a4c3a79b62fc5dbdf8a8c482c53cb
+  git:
+    branch: main                             31fb33c [origin/main] Delete unecessary
+      files
+    describe: heads/main-0-g31fb33cb6e4ca28a
+    remotes:
+    - "origin\thttps://github.com/ratt-ru/solarkat.git (fetch)"
+    - "origin\thttps://github.com/ratt-ru/solarkat.git (push)"
+/idia/users/vicky/software/solarkat/solarkat/solarkat-cabs.yaml:
+  mtime: 1743762117.0483797
+  mtime_str: Fri Apr  4 12:21:57 2025
+  md5hash: 6cb26f24a22402085ff6c8f581a03366
+  git:
+    branch: main                             31fb33c [origin/main] Delete unecessary
+      files
+    describe: heads/main-0-g31fb33cb6e4ca28a
+    remotes:
+    - "origin\thttps://github.com/ratt-ru/solarkat.git (fetch)"
+    - "origin\thttps://github.com/ratt-ru/solarkat.git (push)"
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/casa/flag.yml:
+  mtime: 1743761447.4011571
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 347d05ac94d7c63b9dd75010360c6f88
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/genesis/casa/casa-inputs.yml:
+  mtime: 1743761447.4131572
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 3159524a50e82289ad18e97f47fbf037
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/breizorro.yml:
+  mtime: 1743761447.393157
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 13b64f4a557e0a9d55ee36ce60ec6b70
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/genesis/breizorro/breizorro.yaml:
+  mtime: 1743761447.4131572
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 189ea38035e0e0aa252cfeb469745647
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/crystalball.yml:
+  mtime: 1743761447.4091573
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: b5d37ea3c705a395cb989e1ec78e4a68
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/msutils.yml:
+  mtime: 1743761447.4771578
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: d55f0fe91d43c153f9d7c73092901cf7
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/bdsf.yml:
+  mtime: 1743761447.393157
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 1bdd6c5f9e8087063d55628be8df9932
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/wsclean.yml:
+  mtime: 1743761447.5171583
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 8fbc2c9706910c0da121909626eaaef4
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/genesis/wsclean/wsclean-base.yml:
+  mtime: 1743761447.4411576
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 5680a6ba463776cb1bc63a418672167b
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/quartical.yml:
+  mtime: 1743761447.4771578
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: c898ab49ba104b6f6f4cfb6e0da46f5b
+/users/vicky/.local/lib/python3.10/site-packages/cultcargo/genesis/quartical/argument_schema.yaml:
+  mtime: 1743761447.4371574
+  mtime_str: Fri Apr  4 12:10:47 2025
+  md5hash: 095f1be14d02c7777d99842e96f2b955
+/idia/users/vicky/software/solarkat/solarkat/solarkat-observation-sets.yaml:
+  mtime: 1743760215.944459
+  mtime_str: Fri Apr  4 11:50:15 2025
+  md5hash: 2b565be7e5e8d6441f39b69914368bb4
+  git:
+    branch: main                             31fb33c [origin/main] Delete unecessary
+      files
+    describe: heads/main-0-g31fb33cb6e4ca28a
+    remotes:
+    - "origin\thttps://github.com/ratt-ru/solarkat.git (fetch)"
+    - "origin\thttps://github.com/ratt-ru/solarkat.git (push)"

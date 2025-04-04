@@ -1,0 +1,1 @@
+2025-04-04 14:31:51 STIMELA.solarkat.copycolumn ERROR: recipe 'copycolumn': for_loop.over=ms-list is not a defined input
