@@ -93,7 +93,7 @@ solarkat:
         weight: 'briggs 0'        
         join-channels: true
         fit-spectral-pol: 4 
-        fits-mask: "{previous.mask}"
+        fits-mask: "{previous.outfile}"
         temp-dir: =recipe.dirs.temp
         prefix: '{recipe.image-prefix}'
 
