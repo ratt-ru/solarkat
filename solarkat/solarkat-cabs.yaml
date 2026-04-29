@@ -15,7 +15,7 @@ cabs:
 
   extract_and_save_scan_numbers:
     info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a>'
-    command: solarkat.solarkat.extract_and_save_scan_numbers
+    command: solarkat.extract_and_save_scan_numbers
     flavour: python
     inputs:
       ms:
