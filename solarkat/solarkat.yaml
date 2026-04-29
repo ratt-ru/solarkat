@@ -10,7 +10,9 @@ opts:
     nest: 2
     symlink: log
   backend:
-    select: native
+    singularity:
+      enable: true
+    #select: native # If you want to run it natively use select:native backend
 
 solarkat:
   name: solarkat recipe
