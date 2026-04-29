@@ -184,10 +184,10 @@ def shift_coordinates(ms_list, coords, splitted_ms_dir, datacolumn='all'):
     datacolumn (str): Datacolumn to use (when not defined default is 'all').
     '''
     chgcentre = chgcentre_path or shutil.which("chgcentre")
-      if chgcentre is None:
+    if chgcentre is None:
         raise RuntimeError("Could not find 'chgcentre' in PATH. Try: which chgcentre")
  
-   coordinates = []
+    coordinates = []
     with open(coords, 'r') as file:
         for line in file:
             ra, dec = line.strip().split() # Assuming RA and Dec are separated by a space
