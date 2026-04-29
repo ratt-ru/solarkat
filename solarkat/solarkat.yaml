@@ -10,7 +10,8 @@ opts:
     nest: 2
     symlink: log
   backend:
-    select: native
+    singularity:
+      enable: true
 
 solarkat:
   name: solarkat recipe
@@ -202,9 +203,8 @@ solarkat:
                     vis: '{root.ms}'
                     datacolumn: 'all'
                     scan: '{recipe.scan}'
-                    outputvis: ="{root.dir_out}" + "/" + "{root.perscan_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}.ms"
-
-
+                    outputvis: ="{root.dir_out}" + "/" + "{root.perscan_dir_out}" + "/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}.ms" 
+                   
     get-perscan-old-coords: 
       cab: get_old_coords
       info: 'Get the phase centre coordinates of the scans main field.'
