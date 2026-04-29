@@ -183,7 +183,11 @@ def shift_coordinates(ms_list, coords, splitted_ms_dir, datacolumn='all'):
     splitted_ms_dir (Directory): Path to the scans directory
     datacolumn (str): Datacolumn to use (when not defined default is 'all').
     '''
-    coordinates = []
+    chgcentre = chgcentre_path or shutil.which("chgcentre")
+      if chgcentre is None:
+        raise RuntimeError("Could not find 'chgcentre' in PATH. Try: which chgcentre")
+ 
+   coordinates = []
     with open(coords, 'r') as file:
         for line in file:
             ra, dec = line.strip().split() # Assuming RA and Dec are separated by a space
@@ -192,7 +196,7 @@ def shift_coordinates(ms_list, coords, splitted_ms_dir, datacolumn='all'):
     #Sort the ms_list in numerical order
     sorted_ms_list = sorted(ms_list, key=lambda x: int(x.split('_scan_')[1].split('.')[0]))
     print(sorted_ms_list)
-    chgcentre_path= '/home/samboco/solarKAT/Git_clone/wsclean/build/chgcentre'
+#    chgcentre_path= '/home/samboco/solarKAT/Git_clone/wsclean/build/chgcentre'
 
     for ms, (ra, dec) in zip(sorted_ms_list, coordinates):
         #for ms in sorted_ms_list:

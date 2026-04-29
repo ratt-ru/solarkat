@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+
+# logs
+solarkat/logs/
+solarkat/log-stimela.txt
+
+# outputs
+solarkat/obs1/
+solarkat/*.last
+
+# stimela cache
+solarkat/stimela.config.deps

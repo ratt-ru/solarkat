@@ -31,8 +31,10 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.9"
 stimela = "^2.0.1"
-cult-cargo = "^0.2.0"
-
+cult-cargo = ">=0.2.1rc6"
+python-casacore = ">=3.5"
+astropy = ">=5.0"
+msutils = {git = "https://github.com/SpheMakh/msutils.git"}
 
 [build-system]
 requires = ["poetry-core"]

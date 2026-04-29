@@ -160,7 +160,8 @@ solarkat:
       params:
         msname: =recipe.ms
         old-column: 'MODEL_DATA'
-        new-column: 'MODEL_DATA_ORIGINAL' 
+        new-column: 'MODEL_DATA_ORIGINAL'
+ 
 
 
     scan-numbers-extraction:
