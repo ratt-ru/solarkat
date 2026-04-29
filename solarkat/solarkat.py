@@ -11,7 +11,7 @@ from  MSUtils.msutils import addcol
 from astropy.coordinates import Angle
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import solar_system_ephemeris, EarthLocation, AltAz
-from astropy.coordinates import get_body_barycentric, get_body, get_moon
+from astropy.coordinates import get_body_barycentric, get_body
 
 
 #________________________________________________________________________________________________________________________________________________________
