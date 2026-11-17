@@ -22,7 +22,6 @@ solarkat:
     image-prefix: '{recipe.dir_out}/im{info.suffix}/im{info.suffix}{recipe.suffix}'
     mask-prefix: '{recipe.dir_out}/im{info.suffix}/mask{info.suffix}{recipe.suffix}'
     dirs:
-      ms: ../msdir       # MSs live here
       temp: ./tmp
 
   assign_based_on:
@@ -30,8 +29,8 @@ solarkat:
 
   inputs:
     obs:
-      choices: [L1, L2, UHF, L3, L4, L5, L6, L7,L8]
-      info: "Selects observation by label, -- edit solarkat-observation-sets.yml"
+      dtype: str
+      info: "Selects observation by label (a key under obs in solarkat-observation-sets.yaml)"
       required: true
     suffix:
       dtype: str
@@ -40,13 +39,9 @@ solarkat:
       dtype: str
     ms:
       dtype: MS
-    splitted_ms_suffix:
-      dtype: str
-      default: '_scan_'
-    ms_list:
-      dtype: List[MS]
-    strArray:
-      dtype: List[str]
+    sun_radius_arcsec:
+      dtype: Optional[float]
+      info: "Radius of the Sun's clean-mask region in arcsec. If unset, a default for the observation's band is used."
 
   steps:
     image-1:
@@ -56,11 +51,12 @@ solarkat:
         ms: =recipe.ms
         nchan: 4
         mgain: 0.8
-        size: 1000
+        size: 10000
         niter: 10000
         padding: 2.0
         column: DATA
         scale: 1.5asec
+        auto-mask: 5
         auto-threshold: 3
         weight: 'briggs 0'
         join-channels: true 
@@ -98,6 +94,17 @@ solarkat:
         fits-mask: "{previous.outfile}"
         temp-dir: =recipe.dirs.temp
         prefix: '{recipe.image-prefix}'
+
+    mask-2:
+      cab: breizorro
+      info: 'Creating a fits mask from the Breizorro-masked image'
+      params:
+        threshold: 15
+        outfile: '{steps.image-2.prefix}-mask.fits'
+        restored-image: "{steps.image-2.prefix}-MFS-image.fits"
+        outcatalog: None
+        outregion: None
+
 
     save-flags-1: 
       cab: casa.flagman
@@ -147,13 +154,14 @@ solarkat:
         niter: 100000
         padding: 2.0
         scale: 1.5asec                        
+        auto-threshold: 3
         weight: 'briggs 0'
         join-channels: true
         fit-spectral-pol: 4
         column: CORRECTED_DATA
         temp-dir: =recipe.dirs.temp
         prefix: '{recipe.image-prefix}'
-        fits-mask: "{steps.image-1.prefix}-mask.fits"
+        fits-mask: "{steps.mask-2.outfile}"
 
     backup-model-data:
       cab: msutils.renamecol
@@ -177,9 +185,6 @@ solarkat:
     split-ms-by-scan:
       info: 'Load scan numbers extracted in the previous step and Split the MS into scans using as input the scan_numbers'
       recipe:
-        inputs:
-          scan_file:
-            dtype: File
         steps:
           load-scan-numbers:
             cab: load_scan_numbers
@@ -192,8 +197,6 @@ solarkat:
               inputs:
                 scan_list:
                   dtype: List[str]
-                ms:
-                  dtype: MS
               for_loop:
                 var: scan
                 over: scan_list
@@ -209,10 +212,10 @@ solarkat:
 
     get-perscan-old-coords: 
       cab: get_old_coords
-      info: 'Get the phase centre coordinates of the scans main field.'
+      info: 'Get the original phase centre of each scan, from the FIELD table of the original MS.'
       params: 
-        output_file: '{recipe.dir_out}/old-perscans-coods.txt'
-        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
+        ms: =recipe.ms
+        output_file: '{recipe.dir_out}/old-perscans-coords.txt'
 
 
     get-sun-coordinates: 
@@ -224,13 +227,38 @@ solarkat:
 
 
     shift-to-sun: 
-      cab: shift_coords
-      info: 'Change the phase centre of the main field to the Sun.'
-      params:
-        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
-        coords: '{recipe.steps.get-sun-coordinates.output_file}'
-        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
-        datacolumn: 'all'
+      info: 'Change the phase centre of each per-scan MS to the Sun (chgcentre cab from cult-cargo; rotates DATA, CORRECTED_DATA and MODEL_DATA).'
+      recipe:
+        steps:
+          load-scan-numbers:
+            cab: load_scan_numbers
+            params:
+              scans_file: =root.steps.scan-numbers-extraction.output_file
+          rephase-scans:
+            params:
+              scan_list: =steps.load-scan-numbers.scan_numbers
+              coords_file: =root.steps.get-sun-coordinates.output_file
+            recipe:
+              inputs:
+                scan_list:
+                  dtype: List[str]
+                coords_file:
+                  dtype: File
+              for_loop:
+                var: scan
+                over: scan_list
+              steps:
+                get-coords:
+                  cab: get_scan_coords
+                  params:
+                    coords_file: =recipe.coords_file
+                    scan: =recipe.scan
+                chgcentre:
+                  cab: chgcentre
+                  params:
+                    ms: ="{root.dir_out}/{root.perscan_dir_out}/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}.ms"
+                    ra: =steps.get-coords.ra
+                    dec: =steps.get-coords.dec
 
     image-sun:
       info: "Create a dirty image of the Sun's field for each scan"
@@ -261,9 +289,10 @@ solarkat:
       cab: create_ds9_regions
       info: 'Create ds9 regions for each Sun image.'
       params:
-        ms: =recipe.ms
-        input_file: '{recipe.steps.get-sun-coordinates.output_file}'
-        output_dir: '{recipe.dir_out}/{recipe.regions_dir_out}' 
+        input_file: =steps.get-sun-coordinates.output_file
+        output_dir: '{recipe.dir_out}/{recipe.regions_dir_out}'
+        band: '{recipe.band}'
+        radius_arcsec: =IFSET(recipe.sun_radius_arcsec)
 
 
     make-mask:      
@@ -279,14 +308,11 @@ solarkat:
               scans_file: =root.steps.scan-numbers-extraction.output_file  
           making_masks:
             params:
-              region_dir:  "{root.dir_out}/{root.regions_dir_out}"  
-              scan_list: =steps.load-scan-numbers.scan_numbers   
+              scan_list: =steps.load-scan-numbers.scan_numbers
             recipe:
               inputs:
                 scan_list:
                   dtype: List[str]
-                region_dir:
-                  dtype: Directory 
               for_loop:
                 var: scan
                 over: scan_list
@@ -306,14 +332,11 @@ solarkat:
     deconvolve-sun:
       info: " clean imaging of the Sun for a better model, using the masks created from the make_mask step."
       params:
-        mask_list: =GLOB('{recipe.dir_out}/{recipe.masks_dir_out}/*.fits*') 
-        ms_list:  =GLOB('{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms') # insert folder path then glob#         
+        ms_list:  =GLOB('{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms')
       recipe:
         inputs:
           ms_list:
             dtype: List[MS]
-          mask_list:
-            dtype: List[File]
         for_loop:
           var: ms
           over: ms_list
@@ -344,12 +367,8 @@ solarkat:
         ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")
       recipe:
         inputs:
-          scans:
-            dtype: List[MS]
           ms_list:
             dtype: List[MS]
-          mask_list:
-            dtype: List[File]
         for_loop:
           var: ms 
           over: ms_list
@@ -366,13 +385,38 @@ solarkat:
               prefix: ="{root.dir_out}/{root.perscan_dir_out}/{root.clean_image_sun}/" + STRIPEXT(BASENAME(recipe.ms)) 
 
     rephase:
-      cab: shift_coords
-      info: "Rephase scans coordinate to main field"
-      params:
-        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
-        coords: '{recipe.steps.get-perscan-old-coords.output_file}'
-        splitted_ms_dir: '{recipe.dir_out}/{recipe.perscan_dir_out}/'
-        datacolumn: 'all'
+      info: 'Rephase each per-scan MS back to its original phase centre.'
+      recipe:
+        steps:
+          load-scan-numbers:
+            cab: load_scan_numbers
+            params:
+              scans_file: =root.steps.scan-numbers-extraction.output_file
+          rephase-scans:
+            params:
+              scan_list: =steps.load-scan-numbers.scan_numbers
+              coords_file: =root.steps.get-perscan-old-coords.output_file
+            recipe:
+              inputs:
+                scan_list:
+                  dtype: List[str]
+                coords_file:
+                  dtype: File
+              for_loop:
+                var: scan
+                over: scan_list
+              steps:
+                get-coords:
+                  cab: get_scan_coords
+                  params:
+                    coords_file: =recipe.coords_file
+                    scan: =recipe.scan
+                chgcentre:
+                  cab: chgcentre
+                  params:
+                    ms: ="{root.dir_out}/{root.perscan_dir_out}/" + STRIPEXT(BASENAME(root.ms)) + "_scan_{recipe.scan}.ms"
+                    ra: =steps.get-coords.ra
+                    dec: =steps.get-coords.dec
 
 
 
@@ -385,30 +429,14 @@ solarkat:
         likecol: 'MODEL_DATA_ORIGINAL'
 
 
-    copycolumn:
-      info: 'Copying data from MODEL_DATA to MODEL_DATA_SUN, from each scan in the MS to the single MS'
+    copy-sun-model:
+      cab: copy_scan_column_to_ms
+      info: 'Copy MODEL_DATA of each per-scan MS (the Sun model, now at the original phase centre) into MODEL_DATA_SUN of the original MS'
       params:
-        ms-list:  =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*")
-      recipe:
-        inputs:
-          msname:
-            dtype: MS
-          fromcol:
-            dtype: str
-          tocol:
-            dtype: str
-          ms-list:
-            dtype: List[MS]
-        for_loop:
-          var: ms
-          over: ms-list
-        steps:
-          copy-column: 
-            cab:  msutils.copycol
-            params:
-              msname: =recipe.ms
-              fromcol: 'MODEL_DATA'
-              tocol: 'MODEL_DATA_SUN'
+        ms: =recipe.ms
+        ms_list: =GLOB("{recipe.dir_out}/{recipe.perscan_dir_out}/*_scan_*.ms")
+        fromcol: MODEL_DATA
+        tocol: MODEL_DATA_SUN
 
 
     cal-and-peel-sun:
@@ -455,6 +483,7 @@ solarkat:
 
     save-flags-3:
       cab: casa.flagman
+      info: 'Saving flags after 3GC'
       params:
         ms: =recipe.ms
         versionname: "After-3GC.yml"
@@ -475,7 +504,9 @@ solarkat:
         auto-threshold: 3
         weight: 'briggs 0'
         join-channels: true
+        fit-spectral-pol: 4
         column: CORRECTED_RESIDUAL
         temp-dir: =recipe.dirs.temp
         prefix: '{recipe.image-prefix}'
+        fits-mask: "{steps.mask-2.outfile}"
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solarkat"
-version = "1.0.6"
+version = "1.1.0"
 description = "Solar imaging pipeline for solar interference mitigation in MeerKAT data."
 authors = ["Victória da Graça G. Samboco <vicky.samboco@gmail.com>"]
 license = "MIT"
@@ -29,12 +29,14 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-stimela = "^2.0.1"
-cult-cargo = ">=0.2.1rc6"
+python = ">=3.9,<3.14"
+stimela = "^2.1.4"
+# cult-cargo pins the tool images (quay.io/stimela2/*:cc<version>), so keep it
+# on one minor series for reproducible runs.
+cult-cargo = "~0.2.1"
 python-casacore = ">=3.5"
 astropy = ">=5.0"
-msutils = {git = "https://github.com/SpheMakh/msutils.git"}
+numpy = "*"
 
 [build-system]
 requires = ["poetry-core"]
