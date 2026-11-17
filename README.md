@@ -64,6 +64,15 @@ stimela run solarkat.yaml solarkat obs=L1
 
 More details can be found in the Documentation here https://solarkat-docs.readthedocs.io/en/latest/index.html.
 
+### Containers
+
+With the default `singularity` backend, every step runs in a container, so the only things you need on the host are Python with `stimela` and `cult-cargo` (`pip install solarkat` brings both) and Singularity/Apptainer:
+
+- wsclean, chgcentre, CASA, QuartiCal, breizorro and msutils run in the cult-cargo images.
+- SolarKAT's own Python steps run in `ghcr.io/ratt-ru/solarkat:<version>`, built from the `Dockerfile` in this repository and published for every release tag. The version is set under `vars.solarkat.image` in `solarkat-cabs.yaml`.
+
+chgcentre no longer needs to be installed or given a path by hand.
+
 ### Running solarkat on Ilifu
 You can run solarkat on Ilifu by setting ```backend``` to ```slurm```. You can also set the ```srun_opts``` such as ```time``` and ```mem``` (memory to use). For these values, there's no default value.
 ```
