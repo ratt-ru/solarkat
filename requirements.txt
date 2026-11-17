@@ -1,4 +1,5 @@
 stimela
 cult-cargo
-MSutils
-quartical
+python-casacore
+astropy
+numpy
