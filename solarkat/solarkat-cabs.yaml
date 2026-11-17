@@ -2,24 +2,45 @@
 _include:
   (cultcargo):
     - casa/flag.yml
+    - casa/split.yml
     - breizorro.yml
     - crystalball.yml
     - msutils.yml
     - bdsf.yml
     - wsclean.yml
     - quartical.yml
-    - msutils.yml
+    - chgcentre.yml
 
+# Container image for SolarKAT's own python steps. It is built from the Dockerfile
+# at the top of the repository and published to GHCR by
+# .github/workflows/docker.yml for every release tag (vX.Y.Z). Keep the version in
+# step with the solarkat release, or point it at your own build.
+# The third-party tools (wsclean, chgcentre, CASA, QuartiCal, breizorro, msutils)
+# use the cult-cargo images.
+vars:
+  solarkat:
+    image:
+      registry: ghcr.io/ratt-ru
+      name: solarkat
+      version: 1.1.0
+
+# All python cabs call solarkat.<function>. This resolves both when the recipe is
+# run from the repository's solarkat/ directory (solarkat.py is picked up from the
+# current directory) and when solarkat is pip-installed (the package re-exports
+# the functions in __init__.py).
 
 cabs:
 
   extract_and_save_scan_numbers:
-    info: 'Extract a list of unique scan numbers from a MS file. The scans output parameter is a>'
-    command: solarkat.solarkat.extract_and_save_scan_numbers
+    info: 'Extract the unique scan numbers of an MS and write them to a text file, one per line.'
+    command: solarkat.extract_and_save_scan_numbers
     flavour: python
+    image:
+      _use: vars.solarkat.image
     inputs:
       ms:
         dtype: MS
+        required: true
     outputs:
       output_file:
         dtype: File
@@ -27,11 +48,12 @@ cabs:
 
   load_scan_numbers:
     command: |
-      print(f"Loading scan numbers................")
       with open(scans_file, 'r') as f:
-        scan_numbers = [line.strip() for line in f]
+        scan_numbers = [line.strip() for line in f if line.strip()]
       print('Loaded scan numbers:', scan_numbers)
     flavour: python-code
+    image:
+      _use: vars.solarkat.image
     inputs:
       scans_file:
         dtype: File
@@ -40,15 +62,44 @@ cabs:
         dtype: List[str]
 
 
+  get_scan_coords:
+    info: 'Look up the RA/Dec of one scan in a coordinate file written by get_old_coords or sun_coordinates.'
+    flavour: python-code
+    command: |
+      ra = dec = None
+      with open(coords_file) as f:
+        for line in f:
+          fields = line.split()
+          if len(fields) == 3 and fields[0] == str(scan):
+            _, ra, dec = fields
+            break
+      if ra is None:
+        raise RuntimeError(f"scan {scan} not found in {coords_file}")
+      print(f"scan {scan}: {ra} {dec}")
+    image:
+      _use: vars.solarkat.image
+    inputs:
+      coords_file:
+        dtype: File
+        required: true
+      scan:
+        dtype: str
+        required: true
+    outputs:
+      ra:
+        dtype: str
+      dec:
+        dtype: str
+
 
   splitms_scan:
-    command: split
-    flavour: casa-task
+    info: 'CASA split of one scan, keeping all data columns (the cult-cargo casa.split cab does not allow datacolumn=all)'
+    command: casatasks.split
+    _use: lib.misc.casa6.command-data
     inputs:
       vis:
         dtype: MS
         required: true
-        default: '{recipe.ms}'
       scan:
         dtype: str
         info: "scan number range"
@@ -58,16 +109,18 @@ cabs:
         default: 'all'
       outputvis:
         dtype: str
-        default: '{recipe.ms}-output'
         required: true
 
 
   get_old_coords:
+    info: 'Write the original phase centre of every scan (read from the FIELD table of the original MS) to a coordinate file.'
     command: solarkat.get_old_coords
     flavour: python
+    image:
+      _use: vars.solarkat.image
     inputs:
-      ms_list:
-        dtype: List[MS]
+      ms:
+        dtype: MS
         required: true
     outputs:
       output_file:
@@ -75,8 +128,11 @@ cabs:
 
 
   sun_coordinates:
+    info: 'Write the position of the Sun at the mean time of every scan to a coordinate file.'
     command: solarkat.get_sun_coordinates
     flavour: python
+    image:
+      _use: vars.solarkat.image
     inputs:
       ms:
         dtype: MS
@@ -86,31 +142,44 @@ cabs:
         dtype: File
 
 
-  shift_coords:
-    command: solarkat.shift_coordinates
-    flavour: python
-    inputs:
-      ms_list:
-        dtype: List[MS]
-      coords:
-        dtype: File
-        required: true
-      splitted_ms_dir:
-        dtype: Directory
-      datacolumn:
-        dtype: str
-
-
   create_ds9_regions:
     command: solarkat.create_ds9_region_from_file
     flavour: python
-    info: 'A cab to create a region file of the position of the Sun from the sun_coordinates file'
+    image:
+      _use: vars.solarkat.image
+    info: 'Create one DS9 region file around the Sun per scan, from the sun_coordinates file.'
     inputs:
       input_file:
         dtype: File
         required: true
       output_dir:
-        dtype: Directory
+        dtype: str
+        required: true
+      band:
+        dtype: str
+        default: L
+      radius_arcsec:
+        dtype: Optional[float]
+        info: 'Radius of the region in arcsec. If unset, a default for the band is used.'
+
+
+  copy_scan_column_to_ms:
+    command: solarkat.copy_scan_column_to_ms
+    flavour: python
+    image:
+      _use: vars.solarkat.image
+    info: 'Copy a column from every per-scan MS into a column of the original MS, matching rows by scan.'
+    inputs:
       ms:
         dtype: MS
         required: true
+        writable: true
+      ms_list:
+        dtype: List[MS]
+        required: true
+      fromcol:
+        dtype: str
+        default: MODEL_DATA
+      tocol:
+        dtype: str
+        default: MODEL_DATA_SUN
